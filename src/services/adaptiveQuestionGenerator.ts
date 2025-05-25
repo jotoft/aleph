@@ -272,35 +272,54 @@ export class AdaptiveQuestionGenerator {
   }
 
   private createWordContextQuestion(letter: PersianLetter, form: LetterForm): Question {
-    // Select a word that contains the letter
-    const wordData = letter.exampleWords[
-      Math.floor(Math.random() * letter.exampleWords.length)
-    ];
-
-    // Find the position of the letter in the word
+    // Find a word that contains the letter in the specific form we're testing
     const letterForm = letter[form];
-    let targetLetterIndex = -1;
+    let selectedWord = null;
+    let targetIndex = -1;
     
-    // Search for the letter form in the word
-    for (let i = 0; i < wordData.word.length; i++) {
-      if (wordData.word[i] === letterForm) {
-        targetLetterIndex = i;
-        break;
-      }
-    }
-    
-    // If specific form not found, try to find any form of the letter
-    if (targetLetterIndex === -1) {
-      const allForms = [letter.isolated, letter.initial, letter.medial, letter.final];
+    // Try to find a word containing the specific form
+    for (const wordData of letter.exampleWords) {
       for (let i = 0; i < wordData.word.length; i++) {
-        if (allForms.includes(wordData.word[i])) {
-          targetLetterIndex = i;
+        if (wordData.word[i] === letterForm) {
+          selectedWord = wordData;
+          targetIndex = i;
           break;
         }
       }
+      if (selectedWord) break;
+    }
+    
+    // If we can't find a word with the specific form, fall back to any form
+    if (!selectedWord) {
+      // For isolated form, prefer words where letter appears at the end disconnected
+      // For initial form, prefer words where letter is at the beginning
+      // For medial form, prefer words where letter is in the middle
+      // For final form, prefer words where letter is at the end connected
+      
+      const allForms = [letter.isolated, letter.initial, letter.medial, letter.final];
+      for (const wordData of letter.exampleWords) {
+        for (let i = 0; i < wordData.word.length; i++) {
+          if (allForms.includes(wordData.word[i])) {
+            selectedWord = wordData;
+            targetIndex = i;
+            // Update the form to match what's actually in the word
+            if (wordData.word[i] === letter.isolated) form = 'isolated';
+            else if (wordData.word[i] === letter.initial) form = 'initial';
+            else if (wordData.word[i] === letter.medial) form = 'medial';
+            else if (wordData.word[i] === letter.final) form = 'final';
+            break;
+          }
+        }
+        if (selectedWord) break;
+      }
+    }
+    
+    // If still no word found, use the first available word
+    if (!selectedWord) {
+      selectedWord = letter.exampleWords[0];
+      targetIndex = 0;
     }
 
-    // For now, create a simple "identify the letter in word" question
     const options = [letter.nameEn];
     const distractors = this.getSmartDistracters(letter.id, 'nameEn', 3);
     options.push(...distractors);
@@ -308,15 +327,15 @@ export class AdaptiveQuestionGenerator {
     return {
       type: 'wordContext',
       letter,
-      form,
+      form, // This is now the actual form found in the word
       word: {
-        persian: wordData.word,
-        transliteration: wordData.transliteration,
-        meaning: wordData.meaning
+        persian: selectedWord.word,
+        transliteration: selectedWord.transliteration,
+        meaning: selectedWord.meaning
       },
       options: this.shuffleArray(options),
       correctAnswer: letter.nameEn,
-      targetLetterIndex
+      targetLetterIndex: targetIndex
     };
   }
 
