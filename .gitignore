@@ -1207,3 +1207,13 @@
 /.idea/aleph.iml
 /.idea/modules.xml
 /.idea/vcs.xml
+/node_modules/.tmp/tsconfig.app.tsbuildinfo
+/node_modules/.tmp/tsconfig.node.tsbuildinfo
+/node_modules/.vue-global-types/vue_3.5_0_0_0.d.ts
+/node_modules/@rollup/rollup-linux-x64-musl/package.json
+/node_modules/@rollup/rollup-linux-x64-musl/README.md
+/node_modules/@rollup/rollup-linux-x64-musl/rollup.linux-x64-musl.node
+/dist/assets/index-BSSW-UfX.js
+/dist/assets/index-Dwtxjvq9.css
+/dist/index.html
+/dist/vite.svg
