@@ -6,11 +6,10 @@ import MasteryProgress from './components/MasteryProgress.vue';
 import { persianLetters } from './data/persianLetters';
 import { MasteryTracker } from './services/masteryTracking';
 
-const currentView = ref<'study' | 'quiz'>('study');
+const currentView = ref<'study' | 'quiz' | 'progress'>('study');
 const currentLetterIndex = ref(0);
 const currentLetter = ref(persianLetters[currentLetterIndex.value]);
 const isDarkMode = ref(false);
-const showProgress = ref(false);
 const masteryData = ref<Map<string, any>>(new Map());
 
 const nextLetter = () => {
@@ -87,6 +86,12 @@ onUnmounted(() => {
         >
           Practice Quiz
         </button>
+        <button 
+          @click="() => { currentView = 'progress'; loadMasteryData(); }" 
+          :class="{ active: currentView === 'progress' }"
+        >
+          Progress
+        </button>
       </nav>
     </header>
 
@@ -120,17 +125,14 @@ onUnmounted(() => {
             </button>
           </div>
         </div>
-        
-        <div class="progress-section">
-          <button @click="showProgress = !showProgress" class="toggle-progress">
-            {{ showProgress ? 'Hide' : 'Show' }} Progress
-          </button>
-          <MasteryProgress v-if="showProgress" :mastery-data="masteryData" />
-        </div>
       </div>
 
-      <div v-else class="quiz-mode">
+      <div v-else-if="currentView === 'quiz'" class="quiz-mode">
         <QuizMode @close="currentView = 'study'" />
+      </div>
+      
+      <div v-else-if="currentView === 'progress'" class="progress-view">
+        <MasteryProgress :mastery-data="masteryData" />
       </div>
     </main>
   </div>
@@ -371,30 +373,7 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-.progress-section {
-  margin-top: 1rem;
-}
-
-.toggle-progress {
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border: none;
-  background-color: #3498db;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.toggle-progress:hover {
-  background-color: #2980b9;
-}
-
-.app.dark .toggle-progress {
-  background-color: #2563eb;
-}
-
-.app.dark .toggle-progress:hover {
-  background-color: #1d4ed8;
+.progress-view {
+  max-width: 1200px;
+  margin: 0 auto;
 }</style>

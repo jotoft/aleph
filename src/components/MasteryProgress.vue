@@ -1,6 +1,46 @@
 <template>
   <div class="mastery-progress">
-    <h3>Your Progress</h3>
+    <div class="progress-header">
+      <h2>Your Learning Progress</h2>
+      <div class="stats-summary">
+        <div class="stat">
+          <span class="stat-value">{{ masteredCount }}</span>
+          <span class="stat-label">Mastered</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ proficientCount }}</span>
+          <span class="stat-label">Proficient</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ familiarCount }}</span>
+          <span class="stat-label">Familiar</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ learningCount }}</span>
+          <span class="stat-label">Learning</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="form-dot high"></div>
+        <span>High accuracy (>80%)</span>
+      </div>
+      <div class="legend-item">
+        <div class="form-dot medium"></div>
+        <span>Medium accuracy (50-80%)</span>
+      </div>
+      <div class="legend-item">
+        <div class="form-dot low"></div>
+        <span>Low accuracy (<50%)</span>
+      </div>
+      <div class="legend-item">
+        <div class="form-dot untested"></div>
+        <span>Not practiced yet</span>
+      </div>
+    </div>
+
     <div class="letter-grid">
       <div 
         v-for="letterData in letterProgress" 
@@ -15,25 +55,31 @@
       >
         <div class="letter-display">{{ letterData.letter.isolated }}</div>
         <div class="letter-name">{{ letterData.letter.nameEn }}</div>
+        <div class="letter-name-fa">{{ letterData.letter.nameFa }}</div>
         <div class="mastery-bar">
           <div 
             class="mastery-fill" 
             :style="{ width: `${letterData.overallMastery * 100}%` }"
           ></div>
+          <span class="mastery-percent">{{ Math.round(letterData.overallMastery * 100) }}%</span>
         </div>
         <div class="form-indicators">
-          <div 
-            v-for="form in forms" 
-            :key="form"
-            class="form-dot"
-            :class="{ 
-              'high': getFormAccuracy(letterData.forms[form]) > 0.8,
-              'medium': getFormAccuracy(letterData.forms[form]) > 0.5,
-              'low': getFormAccuracy(letterData.forms[form]) <= 0.5,
-              'untested': letterData.forms[form].exposures === 0
-            }"
-            :title="`${form}: ${Math.round(getFormAccuracy(letterData.forms[form]) * 100)}%`"
-          ></div>
+          <div class="form-row" v-for="form in forms" :key="form">
+            <span class="form-label">{{ form.charAt(0).toUpperCase() + form.slice(1) }}</span>
+            <div 
+              class="form-dot"
+              :class="{ 
+                'high': getFormAccuracy(letterData.forms[form]) > 0.8,
+                'medium': getFormAccuracy(letterData.forms[form]) > 0.5,
+                'low': getFormAccuracy(letterData.forms[form]) <= 0.5,
+                'untested': letterData.forms[form].exposures === 0
+              }"
+              :title="`${form}: ${Math.round(getFormAccuracy(letterData.forms[form]) * 100)}% (${letterData.forms[form].exposures} attempts)`"
+            ></div>
+          </div>
+        </div>
+        <div class="attempts-info">
+          {{ getTotalAttempts(letterData) }} attempts
         </div>
       </div>
     </div>
@@ -76,88 +122,165 @@ const letterProgress = computed(() => {
   });
 });
 
+const masteredCount = computed(() => letterProgress.value.filter(l => l.masteryLevel === 3).length);
+const proficientCount = computed(() => letterProgress.value.filter(l => l.masteryLevel === 2).length);
+const familiarCount = computed(() => letterProgress.value.filter(l => l.masteryLevel === 1).length);
+const learningCount = computed(() => letterProgress.value.filter(l => l.masteryLevel === 0).length);
+
 function getFormAccuracy(form: any): number {
   if (!form || form.exposures === 0) return 0;
   return form.correctAnswers / form.exposures;
+}
+
+function getTotalAttempts(letterData: any): number {
+  return Object.values(letterData.forms).reduce((sum: number, form: any) => sum + (form.exposures || 0), 0);
 }
 </script>
 
 <style scoped>
 .mastery-progress {
-  padding: 1.5rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 2rem;
 }
 
-.dark .mastery-progress {
-  background-color: #374151;
-}
-
-.mastery-progress h3 {
-  margin: 0 0 1.5rem 0;
+.progress-header {
   text-align: center;
+  margin-bottom: 2rem;
+}
+
+.progress-header h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 2rem;
   color: #1f2937;
 }
 
-.dark .mastery-progress h3 {
+.dark .progress-header h2 {
   color: #f3f4f6;
+}
+
+.stats-summary {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.dark .stat-value {
+  color: #f3f4f6;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dark .stat-label {
+  color: #9ca3af;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
+.dark .legend {
+  background-color: #1f2937;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.dark .legend-item {
+  color: #d1d5db;
 }
 
 .letter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1rem;
 }
 
 .letter-card {
-  padding: 0.75rem;
-  background-color: #f3f4f6;
-  border-radius: 8px;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 12px;
   text-align: center;
   transition: all 0.3s;
-  border: 2px solid transparent;
+  border: 3px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  position: relative;
 }
 
 .dark .letter-card {
-  background-color: #1f2937;
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.letter-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .letter-card.mastered {
   border-color: #10b981;
-  background-color: #d1fae5;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
 }
 
 .dark .letter-card.mastered {
-  background-color: #064e3b;
+  background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
   border-color: #10b981;
 }
 
 .letter-card.proficient {
   border-color: #3b82f6;
-  background-color: #dbeafe;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
 }
 
 .dark .letter-card.proficient {
-  background-color: #1e3a8a;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
   border-color: #3b82f6;
 }
 
 .letter-card.familiar {
   border-color: #f59e0b;
-  background-color: #fef3c7;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
 }
 
 .dark .letter-card.familiar {
-  background-color: #78350f;
+  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
   border-color: #f59e0b;
 }
 
 .letter-display {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-family: 'Vazir', 'Arial', sans-serif;
   margin-bottom: 0.25rem;
   color: #1f2937;
+  line-height: 1;
 }
 
 .dark .letter-display {
@@ -165,21 +288,34 @@ function getFormAccuracy(form: any): number {
 }
 
 .letter-name {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
 }
 
 .dark .letter-name {
+  color: #d1d5db;
+}
+
+.letter-name-fa {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+  font-family: 'Vazir', 'Arial', sans-serif;
+}
+
+.dark .letter-name-fa {
   color: #9ca3af;
 }
 
 .mastery-bar {
-  height: 4px;
+  height: 6px;
   background-color: #e5e7eb;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
+  border-radius: 3px;
+  margin-bottom: 0.75rem;
+  position: relative;
+  overflow: visible;
 }
 
 .dark .mastery-bar {
@@ -190,31 +326,68 @@ function getFormAccuracy(form: any): number {
   height: 100%;
   background-color: #3b82f6;
   transition: width 0.3s;
+  border-radius: 3px;
+}
+
+.mastery-percent {
+  position: absolute;
+  right: -35px;
+  top: -8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+.dark .mastery-percent {
+  color: #60a5fa;
 }
 
 .form-indicators {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   gap: 0.25rem;
+  align-items: stretch;
+  margin-bottom: 0.5rem;
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.125rem 0;
+}
+
+.form-label {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: left;
+}
+
+.dark .form-label {
+  color: #9ca3af;
 }
 
 .form-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: #e5e7eb;
+  transition: all 0.2s;
 }
 
 .form-dot.high {
   background-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .form-dot.medium {
   background-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
 .form-dot.low {
   background-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
 .form-dot.untested {
@@ -223,5 +396,15 @@ function getFormAccuracy(form: any): number {
 
 .dark .form-dot.untested {
   background-color: #4b5563;
+}
+
+.attempts-info {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.dark .attempts-info {
+  color: #9ca3af;
 }
 </style>
