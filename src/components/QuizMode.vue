@@ -48,8 +48,12 @@
           <div v-else-if="currentQuestion.type === 'wordContext'" class="question">
             <div class="word-display" v-if="currentQuestion.word">
               <p class="word-persian" dir="rtl" v-html="highlightedWord"></p>
-              <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
-              <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
+              <transition name="fade">
+                <div v-if="answered" class="word-info">
+                  <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
+                  <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
+                </div>
+              </transition>
             </div>
             <p class="question-text">Which letter is highlighted?</p>
           </div>
@@ -521,10 +525,14 @@ onUnmounted(() => {
 
 /* Mark highlighting styles moved to global style block below */
 
+.word-info {
+  margin-top: 0.5rem;
+}
+
 .word-display .word-transliteration {
   font-size: 1rem;
   color: #6b7280;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
 }
 
 .dark .word-display .word-transliteration {
