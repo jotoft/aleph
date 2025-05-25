@@ -47,12 +47,7 @@
           <!-- Word Context Quiz -->
           <div v-else-if="currentQuestion.type === 'wordContext'" class="question">
             <div class="word-display" v-if="currentQuestion.word">
-              <p class="word-persian">
-                <span v-for="(char, index) in currentQuestion.word.persian" :key="index"
-                      :class="{ 'highlighted-letter': index === currentQuestion.targetLetterIndex }">
-                  {{ char }}
-                </span>
-              </p>
+              <p class="word-persian" v-html="highlightedWord"></p>
               <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
               <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
             </div>
@@ -185,6 +180,27 @@ const successMessages = [
   'Outstanding! 🏆',
   'Superb! ⭐'
 ];
+
+const highlightedWord = computed(() => {
+  if (!currentQuestion.value || 
+      currentQuestion.value.type !== 'wordContext' || 
+      !currentQuestion.value.word ||
+      currentQuestion.value.targetLetterIndex === undefined ||
+      currentQuestion.value.targetLetterIndex < 0) {
+    return currentQuestion.value?.word?.persian || '';
+  }
+  
+  const word = currentQuestion.value.word.persian;
+  const index = currentQuestion.value.targetLetterIndex;
+  
+  // Use a zero-width space approach to maintain text shaping
+  const before = word.substring(0, index);
+  const letter = word.substring(index, index + 1);
+  const after = word.substring(index + 1);
+  
+  // Use mark tag which is semantic for highlighting and doesn't break text flow
+  return `${before}<mark class="highlighted-letter">${letter}</mark>${after}`;
+});
 
 function getSuccessMessage() {
   return successMessages[Math.floor(Math.random() * successMessages.length)];
@@ -505,17 +521,17 @@ onUnmounted(() => {
   direction: rtl;
 }
 
-.word-persian .highlighted-letter {
+.word-persian mark.highlighted-letter {
   background-color: #fbbf24;
-  color: #1f2937;
-  padding: 0 0.25rem;
+  color: inherit;
+  padding: 0.1rem 0.3rem;
   border-radius: 4px;
-  font-weight: bold;
+  font-weight: normal;
+  display: inline;
 }
 
-.dark .word-persian .highlighted-letter {
+.dark .word-persian mark.highlighted-letter {
   background-color: #f59e0b;
-  color: #fef3c7;
 }
 
 .word-display .word-transliteration {
