@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import LetterDisplay from './components/LetterDisplay.vue';
+import QuizMode from './components/QuizMode.vue';
 import { persianLetters } from './data/persianLetters';
 
 const currentView = ref<'study' | 'quiz'>('study');
@@ -98,7 +99,7 @@ onMounted(() => {
       </div>
 
       <div v-else class="quiz-mode">
-        <p>Quiz mode coming soon!</p>
+        <QuizMode @close="currentView = 'study'" />
       </div>
     </main>
   </div>
@@ -332,18 +333,9 @@ onMounted(() => {
 }
 
 .quiz-mode {
-  text-align: center;
-  padding: 3rem;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
-  transition: background-color 0.3s, box-shadow 0.3s;
-}
-
-.app.dark .quiz-mode {
-  background-color: #374151;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  color: #e5e7eb;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }</style>
