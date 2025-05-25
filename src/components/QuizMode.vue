@@ -238,7 +238,7 @@ function generateQuiz() {
   }
 }
 
-function selectAnswer(answer: string, index?: number) {
+function selectAnswer(answer: string, _index?: number) {
   if (answered.value) return;
   
   selectedAnswer.value = answer;
@@ -542,6 +542,39 @@ onUnmounted(() => {
 
 .answer-button.letter-option {
   padding: 0.5rem;
+}
+
+.answer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.hotkey-hint {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.dark .hotkey-hint {
+  background-color: #4b5563;
+  color: #d1d5db;
+}
+
+.answer-button:hover .hotkey-hint {
+  background-color: #3b82f6;
+  color: white;
 }
 
 .letter-option-text {
