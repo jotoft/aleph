@@ -970,6 +970,12 @@ onUnmounted(() => {
   font-style: inherit;
   border: none;
   outline: none;
+  /* Mobile-specific fixes */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  display: inline;
+  position: static;
+  line-height: inherit;
 }
 
 .dark .word-persian mark.highlighted-letter {
@@ -982,5 +988,11 @@ onUnmounted(() => {
   font-style: inherit;
   border: none;
   outline: none;
+  /* Mobile-specific fixes */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  display: inline;
+  position: static;
+  line-height: inherit;
 }
 </style>
