@@ -212,3 +212,6 @@ The app is simple enough that Vue's reactivity system handles state well. The on
 - Ensure `.dark` class is on app root
 - Check that component uses `:global(.dark)` for child selectors
 - Verify dark mode styles exist for new components
+
+### Known Issues
+- **iOS Letter Highlighting**: In word context questions, highlighted Persian letters may appear disconnected on iOS browsers (Safari, Firefox, and others) despite proper CSS resets. The issue doesn't occur in desktop browsers. This appears to be related to iOS's WebKit rendering engine (all iOS browsers use WebKit) and how it handles inline elements within RTL text.
