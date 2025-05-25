@@ -3,12 +3,10 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import LetterDisplay from './components/LetterDisplay.vue';
 import QuizMode from './components/QuizMode.vue';
 import MasteryProgress from './components/MasteryProgress.vue';
-import HighlightTest from './components/HighlightTest.vue';
 import { persianLetters } from './data/persianLetters';
 import { MasteryTracker } from './services/masteryTracking';
 
-const currentView = ref<'study' | 'quiz' | 'progress' | 'test'>('study');
-const showTest = ref(false);
+const currentView = ref<'study' | 'quiz' | 'progress'>('study');
 const currentLetterIndex = ref(0);
 const currentLetter = ref(persianLetters[currentLetterIndex.value]);
 const isDarkMode = ref(false);
@@ -50,18 +48,6 @@ const loadMasteryData = () => {
   }
 };
 
-const handleKeyPress = (e: KeyboardEvent) => {
-  // Press 'H' to toggle highlight test view
-  if (e.key === 'h' && e.altKey) {
-    e.preventDefault();
-    showTest.value = !showTest.value;
-    if (showTest.value) {
-      currentView.value = 'test';
-    } else {
-      currentView.value = 'study';
-    }
-  }
-};
 
 onMounted(() => {
   const savedDarkMode = localStorage.getItem('darkMode');
@@ -72,12 +58,10 @@ onMounted(() => {
   
   // Refresh mastery data when returning from quiz
   window.addEventListener('focus', loadMasteryData);
-  window.addEventListener('keydown', handleKeyPress);
 });
 
 onUnmounted(() => {
   window.removeEventListener('focus', loadMasteryData);
-  window.removeEventListener('keydown', handleKeyPress);
 });
 </script>
 
@@ -150,10 +134,6 @@ onUnmounted(() => {
       
       <div v-else-if="currentView === 'progress'" class="progress-view">
         <MasteryProgress :mastery-data="masteryData" />
-      </div>
-      
-      <div v-else-if="currentView === 'test'" class="test-view">
-        <HighlightTest />
       </div>
     </main>
   </div>
