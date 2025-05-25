@@ -165,13 +165,31 @@ const importMessage = ref('');
 const importError = ref(false);
 
 function exportProgress() {
-  const data = localStorage.getItem('masteryData');
-  if (!data) {
+  const masteryData = localStorage.getItem('masteryData');
+  if (!masteryData) {
     alert('No progress data to export!');
     return;
   }
   
-  const blob = new Blob([data], { type: 'application/json' });
+  // Create a comprehensive export object
+  const exportData = {
+    version: '2.0',
+    exportDate: new Date().toISOString(),
+    masteryData: JSON.parse(masteryData),
+    wordProgressionData: null as any
+  };
+  
+  // Include word progression data if available
+  const wordData = localStorage.getItem('wordProgressionData');
+  if (wordData) {
+    try {
+      exportData.wordProgressionData = JSON.parse(wordData);
+    } catch (e) {
+      console.error('Failed to parse word progression data:', e);
+    }
+  }
+  
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -192,14 +210,33 @@ function importProgress(event: Event) {
   reader.onload = (e) => {
     try {
       const data = e.target?.result as string;
-      // Validate the data by trying to parse it
-      JSON.parse(data); // This will throw if invalid
-      MasteryTracker.deserializeFromJSON(data); // This validates the structure
+      const parsed = JSON.parse(data);
+      
+      // Handle both old format (direct mastery data) and new format (wrapped)
+      let masteryData: any;
+      let wordProgressionData: any = null;
+      
+      if (parsed.version === '2.0') {
+        // New format with version
+        masteryData = parsed.masteryData;
+        wordProgressionData = parsed.wordProgressionData;
+      } else {
+        // Old format - assume it's direct mastery data
+        masteryData = parsed;
+      }
+      
+      // Validate mastery data structure
+      MasteryTracker.deserializeFromJSON(JSON.stringify(masteryData));
       
       // Save to localStorage
-      localStorage.setItem('masteryData', data);
+      localStorage.setItem('masteryData', JSON.stringify(masteryData));
       
-      importMessage.value = 'Progress imported successfully! Refresh the page to see changes.';
+      // Save word progression data if available
+      if (wordProgressionData) {
+        localStorage.setItem('wordProgressionData', JSON.stringify(wordProgressionData));
+      }
+      
+      importMessage.value = 'Progress imported successfully! Refreshing...';
       importError.value = false;
       
       // Refresh the page after a short delay
@@ -209,6 +246,7 @@ function importProgress(event: Event) {
     } catch (error) {
       importMessage.value = 'Error importing file. Please check it\'s a valid progress file.';
       importError.value = true;
+      console.error('Import error:', error);
     }
   };
   
