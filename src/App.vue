@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import LetterDisplay from './components/LetterDisplay.vue';
 import { persianLetters } from './data/persianLetters';
 
 const currentView = ref<'study' | 'quiz'>('study');
 const currentLetterIndex = ref(0);
 const currentLetter = ref(persianLetters[currentLetterIndex.value]);
+const isDarkMode = ref(false);
 
 const nextLetter = () => {
   if (currentLetterIndex.value < persianLetters.length - 1) {
@@ -25,12 +26,31 @@ const selectLetter = (index: number) => {
   currentLetterIndex.value = index;
   currentLetter.value = persianLetters[index];
 };
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value;
+  localStorage.setItem('darkMode', isDarkMode.value.toString());
+  document.documentElement.classList.toggle('dark', isDarkMode.value);
+};
+
+onMounted(() => {
+  const savedDarkMode = localStorage.getItem('darkMode');
+  if (savedDarkMode === 'true') {
+    isDarkMode.value = true;
+    document.documentElement.classList.add('dark');
+  }
+});
 </script>
 
 <template>
   <div class="app">
     <header class="app-header">
-      <h1>Persian Alphabet Learning</h1>
+      <div class="header-top">
+        <h1>Persian Alphabet Learning</h1>
+        <button @click="toggleDarkMode" class="dark-mode-toggle" :title="isDarkMode ? 'Light mode' : 'Dark mode'">
+          {{ isDarkMode ? '☀️' : '🌙' }}
+        </button>
+      </div>
       <nav class="main-nav">
         <button 
           @click="currentView = 'study'" 
@@ -90,18 +110,61 @@ const selectLetter = (index: number) => {
 .app {
   min-height: 100vh;
   background-color: #f5f5f5;
+  transition: background-color 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+:global(.dark) .app {
+  background-color: #1a1a1a;
 }
 
 .app-header {
   background-color: #2c3e50;
   color: white;
-  padding: 1.5rem;
+  padding: 1rem;
   text-align: center;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+}
+
+:global(.dark) .app-header {
+  background-color: #1f2937;
+}
+
+.header-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 0.75rem;
 }
 
 .app-header h1 {
-  margin: 0 0 1rem 0;
-  font-size: 2rem;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.dark-mode-toggle {
+  position: absolute;
+  right: 0;
+  padding: 0.25rem;
+  font-size: 1.25rem;
+  background: none;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: rotate(180deg);
 }
 
 .main-nav {
@@ -111,51 +174,77 @@ const selectLetter = (index: number) => {
 }
 
 .main-nav button {
-  padding: 0.5rem 1.5rem;
+  padding: 0.4rem 1.2rem;
   border: none;
   background-color: #34495e;
   color: white;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 0.9rem;
+}
+
+:global(.dark) .main-nav button {
+  background-color: #374151;
 }
 
 .main-nav button:hover {
   background-color: #4a5f7a;
 }
 
+:global(.dark) .main-nav button:hover {
+  background-color: #4b5563;
+}
+
 .main-nav button.active {
   background-color: #3498db;
 }
 
+:global(.dark) .main-nav button.active {
+  background-color: #2563eb;
+}
+
 .app-main {
-  padding: 2rem;
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .study-mode {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .letter-navigation {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
   background-color: white;
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: background-color 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+
+:global(.dark) .letter-navigation {
+  background-color: #374151;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .letter-navigation button {
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border: none;
   background-color: #3498db;
   color: white;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 0.9rem;
 }
 
 .letter-navigation button:hover:not(:disabled) {
@@ -172,40 +261,70 @@ const selectLetter = (index: number) => {
   color: #2c3e50;
 }
 
+:global(.dark) .letter-counter {
+  color: #e5e7eb;
+}
+
 .letter-selector {
-  margin-top: 2rem;
-  padding: 2rem;
+  margin-top: 1rem;
+  padding: 1rem;
   background-color: white;
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: background-color 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+
+:global(.dark) .letter-selector {
+  background-color: #374151;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .letter-selector h3 {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin: 0 0 1rem 0;
   color: #2c3e50;
+  font-size: 1rem;
+}
+
+:global(.dark) .letter-selector h3 {
+  color: #e5e7eb;
 }
 
 .letter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  gap: 0.4rem;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .letter-button {
-  padding: 0.75rem;
-  font-size: 1.5rem;
+  padding: 0.5rem;
+  font-size: 1.25rem;
   font-family: 'Vazir', 'Arial', sans-serif;
   border: 2px solid #e0e0e0;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s;
+  color: #2c3e50;
+}
+
+:global(.dark) .letter-button {
+  background-color: #4b5563;
+  border-color: #6b7280;
+  color: #e5e7eb;
 }
 
 .letter-button:hover {
   background-color: #f8f9fa;
   border-color: #3498db;
+}
+
+:global(.dark) .letter-button:hover {
+  background-color: #6b7280;
+  border-color: #3b82f6;
 }
 
 .letter-button.active {
@@ -222,4 +341,11 @@ const selectLetter = (index: number) => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   max-width: 600px;
   margin: 0 auto;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+:global(.dark) .quiz-mode {
+  background-color: #374151;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  color: #e5e7eb;
 }</style>
