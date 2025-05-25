@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MasteryTracker, type LetterForm } from './masteryTracking';
+import { MasteryTracker } from './masteryTracking';
 
 describe('MasteryTracker', () => {
   let tracker: MasteryTracker;
@@ -191,9 +191,12 @@ describe('MasteryTracker', () => {
       tracker.recordAttempt('lam', 'medial', false, 'inWord');
 
       const mastery = tracker.getLetterMastery('lam');
-      expect(mastery?.contextualMastery.standalone).toBeGreaterThan(
-        mastery?.contextualMastery.inWords
-      );
+      expect(mastery).toBeDefined();
+      if (mastery) {
+        expect(mastery.contextualMastery.standalone).toBeGreaterThan(
+          mastery.contextualMastery.inWords
+        );
+      }
     });
   });
 
@@ -216,7 +219,9 @@ describe('MasteryTracker', () => {
       
       const behConfusions = newTracker.getConfusionPairs('beh');
       expect(behConfusions).toHaveLength(1);
-      expect(behConfusions[0].letterId).toBe('peh');
+      if (behConfusions.length > 0) {
+        expect(behConfusions[0].letterId).toBe('peh');
+      }
     });
 
     it('should handle empty tracker serialization', () => {

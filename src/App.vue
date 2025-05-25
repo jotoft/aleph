@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import LetterDisplay from './components/LetterDisplay.vue';
 import QuizMode from './components/QuizMode.vue';
+import MasteryProgress from './components/MasteryProgress.vue';
 import { persianLetters } from './data/persianLetters';
+import { MasteryTracker } from './services/masteryTracking';
 
 const currentView = ref<'study' | 'quiz'>('study');
 const currentLetterIndex = ref(0);
 const currentLetter = ref(persianLetters[currentLetterIndex.value]);
 const isDarkMode = ref(false);
+const showProgress = ref(false);
+const masteryData = ref<Map<string, any>>(new Map());
 
 const nextLetter = () => {
   if (currentLetterIndex.value < persianLetters.length - 1) {
@@ -33,11 +37,31 @@ const toggleDarkMode = () => {
   localStorage.setItem('darkMode', isDarkMode.value.toString());
 };
 
+const loadMasteryData = () => {
+  const saved = localStorage.getItem('masteryData');
+  if (saved) {
+    try {
+      const tracker = MasteryTracker.deserializeFromJSON(saved);
+      masteryData.value = tracker.getAllMasteryData();
+    } catch (e) {
+      console.error('Failed to load mastery data:', e);
+    }
+  }
+};
+
 onMounted(() => {
   const savedDarkMode = localStorage.getItem('darkMode');
   if (savedDarkMode === 'true') {
     isDarkMode.value = true;
   }
+  loadMasteryData();
+  
+  // Refresh mastery data when returning from quiz
+  window.addEventListener('focus', loadMasteryData);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('focus', loadMasteryData);
 });
 </script>
 
@@ -95,6 +119,13 @@ onMounted(() => {
               {{ letter.isolated }}
             </button>
           </div>
+        </div>
+        
+        <div class="progress-section">
+          <button @click="showProgress = !showProgress" class="toggle-progress">
+            {{ showProgress ? 'Hide' : 'Show' }} Progress
+          </button>
+          <MasteryProgress v-if="showProgress" :mastery-data="masteryData" />
         </div>
       </div>
 
@@ -338,4 +369,32 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.progress-section {
+  margin-top: 1rem;
+}
+
+.toggle-progress {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.toggle-progress:hover {
+  background-color: #2980b9;
+}
+
+.app.dark .toggle-progress {
+  background-color: #2563eb;
+}
+
+.app.dark .toggle-progress:hover {
+  background-color: #1d4ed8;
 }</style>

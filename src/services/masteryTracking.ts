@@ -128,7 +128,7 @@ export class MasteryTracker {
     this.updateOverallMastery(mastery);
   }
 
-  private getContextualAttempts(letterId: string, context: 'standalone' | 'inWord'): { correct: number; total: number } {
+  private getContextualAttempts(letterId: string, _context: 'standalone' | 'inWord'): { correct: number; total: number } {
     // This is a simplified version - in a full implementation, 
     // we'd track context-specific attempts separately
     const mastery = this.masteryData.get(letterId);

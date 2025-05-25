@@ -14,7 +14,7 @@
         </div>
         <div class="stat-item">
           <span class="stat-label">Question</span>
-          <span class="stat-value">{{ currentQuestionIndex + 1 }}/{{ totalQuestions }}</span>
+          <span class="stat-value">{{ currentQuestionIndex + 1 }}{{ isInfiniteMode ? '' : '/' + totalQuestions }}</span>
         </div>
       </div>
       <button @click="$emit('close')" class="close-button">✕</button>
@@ -27,7 +27,7 @@
           
           <!-- Letter Recognition Quiz -->
           <div v-if="currentQuestion.type === 'letterRecognition'" class="question">
-            <div class="letter-display-large">{{ currentQuestion.letter.isolated }}</div>
+            <div class="letter-display-large">{{ getLetterForm(currentQuestion.letter, currentQuestion.form || 'isolated') }}</div>
             <p class="question-text">What letter is this?</p>
           </div>
 
@@ -39,9 +39,19 @@
 
           <!-- Form Recognition Quiz -->
           <div v-else-if="currentQuestion.type === 'formRecognition'" class="question">
-            <div class="letter-display-large">{{ getLetterForm(currentQuestion.letter, currentQuestion.form!) }}</div>
+            <div class="letter-display-large">{{ getLetterForm(currentQuestion.letter, currentQuestion.form || 'isolated') }}</div>
             <p class="question-text">What form is this letter in?</p>
             <p class="hint">Letter: {{ currentQuestion.letter.nameEn }}</p>
+          </div>
+          
+          <!-- Word Context Quiz -->
+          <div v-else-if="currentQuestion.type === 'wordContext'" class="question">
+            <div class="word-display" v-if="currentQuestion.word">
+              <p class="word-persian">{{ currentQuestion.word.persian }}</p>
+              <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
+              <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
+            </div>
+            <p class="question-text">Which letter is highlighted?</p>
           </div>
 
           <!-- Answer Options -->
@@ -102,7 +112,8 @@
         </div>
       </div>
       <div class="action-buttons">
-        <button @click="startNewQuiz" class="primary-button">New Quiz</button>
+        <button @click="startNewQuiz(false)" class="primary-button">New Quiz (10 Questions)</button>
+        <button @click="startNewQuiz(true)" class="primary-button">Infinite Mode</button>
         <button @click="$emit('close')" class="secondary-button">Back to Study</button>
       </div>
     </div>
@@ -112,25 +123,42 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { persianLetters, type PersianLetter } from '../data/persianLetters';
+import { MasteryTracker } from '../services/masteryTracking';
+import { AdaptiveQuestionGenerator } from '../services/adaptiveQuestionGenerator';
+import type { Question } from '../services/adaptiveQuestionGenerator';
 
 defineEmits<{
   close: []
 }>();
 
-type QuizType = 'letterRecognition' | 'nameToLetter' | 'formRecognition';
-type LetterForm = 'isolated' | 'initial' | 'medial' | 'final';
+// Initialize mastery tracking
+const masteryTracker = new MasteryTracker();
+const questionGenerator = ref(new AdaptiveQuestionGenerator(masteryTracker));
 
-interface Question {
-  type: QuizType;
-  letter: PersianLetter;
-  form?: LetterForm;
-  options: string[];
-  correctAnswer: string;
-}
+// Load saved mastery data
+const loadMasteryData = () => {
+  const saved = localStorage.getItem('masteryData');
+  if (saved) {
+    try {
+      const loadedTracker = MasteryTracker.deserializeFromJSON(saved);
+      // Copy the data to our existing tracker
+      Object.assign(masteryTracker, loadedTracker);
+      questionGenerator.value = new AdaptiveQuestionGenerator(masteryTracker);
+    } catch (e) {
+      console.error('Failed to load mastery data:', e);
+    }
+  }
+};
 
-const totalQuestions = 10;
+// Save mastery data
+const saveMasteryData = () => {
+  localStorage.setItem('masteryData', masteryTracker.serializeToJSON());
+};
+
+const isInfiniteMode = ref(false);
+const totalQuestions = computed(() => isInfiniteMode.value ? Infinity : 10);
 const currentQuestionIndex = ref(0);
-const questions = ref<Question[]>([]);
+const currentQuestion = ref<Question | null>(null);
 const selectedAnswer = ref<string | null>(null);
 const answered = ref(false);
 const isCorrect = ref(false);
@@ -140,8 +168,7 @@ const maxStreak = ref(0);
 const correctAnswers = ref(0);
 const quizComplete = ref(false);
 const autoProgressTimeout = ref<number | null>(null);
-
-const currentQuestion = computed(() => questions.value[currentQuestionIndex.value]);
+const confusedWith = ref<{ letterId: string; form?: string } | null>(null);
 
 const successMessages = [
   'Excellent! 🌟',
@@ -158,92 +185,45 @@ function getSuccessMessage() {
   return successMessages[Math.floor(Math.random() * successMessages.length)];
 }
 
-function getQuestionTypeLabel(type: QuizType): string {
+function getQuestionTypeLabel(type: string): string {
   switch (type) {
     case 'letterRecognition': return 'Letter Recognition';
     case 'nameToLetter': return 'Find the Letter';
     case 'formRecognition': return 'Form Recognition';
+    case 'wordContext': return 'Letter in Context';
+    default: return 'Question';
   }
 }
 
-function getLetterForm(letter: PersianLetter, form: LetterForm): string {
-  return letter[form];
+function getLetterForm(letter: PersianLetter, form: string): string {
+  return letter[form as keyof PersianLetter] as string;
 }
 
-function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-}
-
-function generateQuestion(): Question {
-  const quizTypes: QuizType[] = ['letterRecognition', 'nameToLetter', 'formRecognition'];
-  const type = quizTypes[Math.floor(Math.random() * quizTypes.length)];
-  const letter = persianLetters[Math.floor(Math.random() * persianLetters.length)];
-
-  switch (type) {
-    case 'letterRecognition': {
-      const options = [letter.nameEn];
-      while (options.length < 4) {
-        const randomLetter = persianLetters[Math.floor(Math.random() * persianLetters.length)];
-        if (!options.includes(randomLetter.nameEn)) {
-          options.push(randomLetter.nameEn);
-        }
-      }
-      return {
-        type,
-        letter,
-        options: shuffleArray(options),
-        correctAnswer: letter.nameEn
-      };
-    }
-
-    case 'nameToLetter': {
-      const options = [letter.isolated];
-      while (options.length < 4) {
-        const randomLetter = persianLetters[Math.floor(Math.random() * persianLetters.length)];
-        if (!options.includes(randomLetter.isolated)) {
-          options.push(randomLetter.isolated);
-        }
-      }
-      return {
-        type,
-        letter,
-        options: shuffleArray(options),
-        correctAnswer: letter.isolated
-      };
-    }
-
-    case 'formRecognition': {
-      const forms: LetterForm[] = ['isolated', 'initial', 'medial', 'final'];
-      const form = forms[Math.floor(Math.random() * forms.length)];
-      return {
-        type,
-        letter,
-        form,
-        options: ['Isolated', 'Initial', 'Medial', 'Final'],
-        correctAnswer: form.charAt(0).toUpperCase() + form.slice(1)
-      };
-    }
-  }
-}
-
-function generateQuiz() {
-  questions.value = [];
-  for (let i = 0; i < totalQuestions; i++) {
-    questions.value.push(generateQuestion());
-  }
+function generateNextQuestion() {
+  currentQuestion.value = questionGenerator.value.generateQuestion();
 }
 
 function selectAnswer(answer: string, _index?: number) {
-  if (answered.value) return;
+  if (answered.value || !currentQuestion.value) return;
   
   selectedAnswer.value = answer;
   answered.value = true;
   isCorrect.value = answer === currentQuestion.value.correctAnswer;
+  
+  // Find which letter was confused with (for incorrect answers)
+  if (!isCorrect.value && currentQuestion.value.type === 'nameToLetter') {
+    const confusedLetter = persianLetters.find(l => 
+      l[currentQuestion.value!.form || 'isolated'] === answer
+    );
+    if (confusedLetter) {
+      confusedWith.value = { letterId: confusedLetter.id, form: currentQuestion.value.form };
+    }
+  } else if (!isCorrect.value && currentQuestion.value.type === 'letterRecognition') {
+    const confusedLetter = persianLetters.find(l => l.nameEn === answer);
+    if (confusedLetter) {
+      confusedWith.value = { letterId: confusedLetter.id };
+    }
+  }
   
   if (isCorrect.value) {
     score.value += 10;
@@ -260,17 +240,28 @@ function selectAnswer(answer: string, _index?: number) {
     streak.value = 0;
   }
   
-  // Save progress to localStorage
-  const progress = JSON.parse(localStorage.getItem('quizProgress') || '{}');
-  const letterId = currentQuestion.value.letter.id;
-  if (!progress[letterId]) {
-    progress[letterId] = { correct: 0, total: 0 };
+  // Record attempt in mastery tracker
+  const context = currentQuestion.value.word ? 'inWord' : 'standalone';
+  masteryTracker.recordAttempt(
+    currentQuestion.value.letter.id,
+    currentQuestion.value.form || 'isolated',
+    isCorrect.value,
+    context,
+    confusedWith.value?.letterId,
+    confusedWith.value?.form as any
+  );
+  
+  // Save mastery data
+  saveMasteryData();
+  
+  // Check for new letter suggestions
+  if ((currentQuestionIndex.value + 1) % 10 === 0) {
+    const suggestions = questionGenerator.value.suggestNewLetters();
+    if (suggestions.length > 0) {
+      // TODO: Show notification about new letters available
+      console.log('New letters suggested:', suggestions);
+    }
   }
-  progress[letterId].total++;
-  if (isCorrect.value) {
-    progress[letterId].correct++;
-  }
-  localStorage.setItem('quizProgress', JSON.stringify(progress));
 }
 
 function nextQuestion() {
@@ -280,17 +271,21 @@ function nextQuestion() {
     autoProgressTimeout.value = null;
   }
   
-  if (currentQuestionIndex.value < totalQuestions - 1) {
+  confusedWith.value = null;
+  
+  if (!isInfiniteMode.value && currentQuestionIndex.value >= totalQuestions.value - 1) {
+    quizComplete.value = true;
+  } else {
     currentQuestionIndex.value++;
     selectedAnswer.value = null;
     answered.value = false;
     isCorrect.value = false;
-  } else {
-    quizComplete.value = true;
+    generateNextQuestion();
   }
 }
 
-function startNewQuiz() {
+function startNewQuiz(infinite = false) {
+  isInfiniteMode.value = infinite;
   currentQuestionIndex.value = 0;
   score.value = 0;
   streak.value = 0;
@@ -300,7 +295,8 @@ function startNewQuiz() {
   answered.value = false;
   isCorrect.value = false;
   quizComplete.value = false;
-  generateQuiz();
+  confusedWith.value = null;
+  generateNextQuestion();
 }
 
 function handleKeyPress(event: KeyboardEvent) {
@@ -322,7 +318,8 @@ function handleKeyPress(event: KeyboardEvent) {
 }
 
 onMounted(() => {
-  generateQuiz();
+  loadMasteryData();
+  generateNextQuestion();
   window.addEventListener('keydown', handleKeyPress);
 });
 
@@ -483,6 +480,45 @@ onUnmounted(() => {
   font-size: 0.875rem;
   color: #9ca3af;
   margin: 0;
+}
+
+.word-display {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
+.dark .word-display {
+  background-color: #1f2937;
+}
+
+.word-display .word-persian {
+  font-size: 2.5rem;
+  font-family: 'Vazir', 'Arial', sans-serif;
+  margin: 0 0 0.5rem 0;
+  direction: rtl;
+}
+
+.word-display .word-transliteration {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
+}
+
+.dark .word-display .word-transliteration {
+  color: #9ca3af;
+}
+
+.word-display .word-meaning {
+  font-size: 1rem;
+  color: #3b82f6;
+  margin: 0;
+  font-style: italic;
+}
+
+.dark .word-display .word-meaning {
+  color: #60a5fa;
 }
 
 .answers-grid {
