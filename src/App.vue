@@ -459,4 +459,64 @@ onUnmounted(() => {
 
 .app.dark .app-footer a:hover {
   color: #93bbfc;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.75rem;
+  }
+  
+  .app-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .main-nav {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .main-nav button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: 80px;
+  }
+  
+  .app-main {
+    padding: 1rem;
+  }
+  
+  .letter-navigation {
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .letter-navigation button {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+  }
+  
+  .letter-counter {
+    font-size: 0.9rem;
+  }
+  
+  .letter-grid {
+    gap: 0.3rem;
+    grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+  }
+  
+  .letter-button {
+    padding: 0.4rem;
+    font-size: 1.1rem;
+  }
+  
+  .app-footer {
+    padding: 1.5rem 1rem;
+  }
+  
+  .app-footer p {
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
 }</style>

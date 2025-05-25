@@ -578,4 +578,106 @@ function importProgress(event: Event) {
   background-color: #7f1d1d;
   color: #fee2e2;
 }
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .mastery-progress {
+    padding: 1rem;
+  }
+
+  .progress-header h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .stats-summary {
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .legend {
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.75rem;
+  }
+
+  .legend-item {
+    font-size: 0.75rem;
+  }
+
+  .letter-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .letter-card {
+    padding: 0.75rem;
+  }
+
+  .letter-display {
+    font-size: 2rem;
+  }
+
+  .letter-name {
+    font-size: 0.75rem;
+  }
+
+  .letter-name-fa {
+    font-size: 0.65rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .mastery-bar {
+    margin-bottom: 0.5rem;
+  }
+
+  .mastery-percent {
+    right: -30px;
+    font-size: 0.65rem;
+  }
+
+  .form-label {
+    font-size: 0.6rem;
+  }
+
+  .form-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .attempts-info {
+    font-size: 0.6rem;
+  }
+
+  .data-management {
+    padding: 1rem;
+    margin-top: 2rem;
+  }
+
+  .data-management h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .data-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .export-button,
+  .import-button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>

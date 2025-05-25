@@ -274,4 +274,62 @@ defineProps<{
   color: #3b82f6;
 }
 
-/* Mobile styles removed for laptop optimization */</style>
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .letter-display {
+    padding: 1rem;
+  }
+  
+  .letter-header h2 {
+    font-size: 1.75rem;
+  }
+  
+  .letter-name {
+    font-size: 1rem;
+  }
+  
+  .pronunciation {
+    font-size: 0.9rem;
+  }
+  
+  .swedish-hint {
+    font-size: 0.85rem;
+  }
+  
+  .forms-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .form-card {
+    width: 100%;
+    padding: 0.75rem;
+  }
+  
+  .form-label {
+    font-size: 0.75rem;
+  }
+  
+  .form-letter {
+    font-size: 2.5rem;
+  }
+  
+  .example-words h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .example-word {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .word-persian {
+    font-size: 1.5rem;
+  }
+  
+  .example-word .meaning,
+  .example-word .transliteration {
+    font-size: 0.85rem;
+  }
+}</style>
