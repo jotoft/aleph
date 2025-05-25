@@ -136,6 +136,14 @@ onUnmounted(() => {
         <MasteryProgress :mastery-data="masteryData" />
       </div>
     </main>
+    
+    <footer class="app-footer">
+      <p>
+        Made with ❤️ by <a href="https://github.com/jotoft" target="_blank" rel="noopener">Johan Toft</a> · 
+        <a href="https://github.com/jotoft/aleph" target="_blank" rel="noopener">GitHub</a> · 
+        <a href="https://github.com/jotoft/aleph/blob/master/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      </p>
+    </footer>
   </div>
 </template>
 
@@ -377,4 +385,46 @@ onUnmounted(() => {
 .progress-view {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.app-footer {
+  padding: 2rem;
+  text-align: center;
+  background-color: #f3f4f6;
+  border-top: 1px solid #e5e7eb;
+  margin-top: auto;
+}
+
+.app.dark .app-footer {
+  background-color: #1f2937;
+  border-top-color: #374151;
+}
+
+.app-footer p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.app.dark .app-footer p {
+  color: #9ca3af;
+}
+
+.app-footer a {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.app-footer a:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.app.dark .app-footer a {
+  color: #60a5fa;
+}
+
+.app.dark .app-footer a:hover {
+  color: #93bbfc;
 }</style>
