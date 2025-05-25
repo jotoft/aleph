@@ -83,12 +83,35 @@
         </div>
       </div>
     </div>
+    
+    <div class="data-management">
+      <h3>Data Management</h3>
+      <div class="data-buttons">
+        <button @click="exportProgress" class="export-button">
+          📥 Export Progress
+        </button>
+        <button @click="triggerImport" class="import-button">
+          📤 Import Progress
+        </button>
+        <input 
+          ref="importInput"
+          type="file" 
+          accept=".json"
+          @change="importProgress"
+          style="display: none"
+        />
+      </div>
+      <div v-if="importMessage" class="import-message" :class="{ error: importError }">
+        {{ importMessage }}
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { persianLetters } from '../data/persianLetters';
+import { MasteryTracker } from '../services/masteryTracking';
 import type { LetterMastery } from '../services/masteryTracking';
 
 const props = defineProps<{
@@ -134,6 +157,65 @@ function getFormAccuracy(form: any): number {
 
 function getTotalAttempts(letterData: any): number {
   return Object.values(letterData.forms).reduce((sum: number, form: any) => sum + (form.exposures || 0), 0);
+}
+
+// Import/Export functionality
+const importInput = ref<HTMLInputElement>();
+const importMessage = ref('');
+const importError = ref(false);
+
+function exportProgress() {
+  const data = localStorage.getItem('masteryData');
+  if (!data) {
+    alert('No progress data to export!');
+    return;
+  }
+  
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `persian-progress-${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function triggerImport() {
+  importInput.value?.click();
+}
+
+function importProgress(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = e.target?.result as string;
+      // Validate the data
+      const parsed = JSON.parse(data);
+      const tracker = MasteryTracker.deserializeFromJSON(data);
+      
+      // Save to localStorage
+      localStorage.setItem('masteryData', data);
+      
+      importMessage.value = 'Progress imported successfully! Refresh the page to see changes.';
+      importError.value = false;
+      
+      // Refresh the page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      importMessage.value = 'Error importing file. Please check it\'s a valid progress file.';
+      importError.value = true;
+    }
+  };
+  
+  reader.readAsText(file);
+  
+  // Clear the input so the same file can be selected again
+  (event.target as HTMLInputElement).value = '';
 }
 </script>
 
@@ -406,5 +488,94 @@ function getTotalAttempts(letterData: any): number {
 
 .dark .attempts-info {
   color: #9ca3af;
+}
+
+/* Data Management Section */
+.data-management {
+  margin-top: 3rem;
+  padding: 2rem;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.dark .data-management {
+  background-color: #1f2937;
+}
+
+.data-management h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.dark .data-management h3 {
+  color: #f3f4f6;
+}
+
+.data-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.export-button,
+.import-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.export-button:hover {
+  background-color: #2563eb;
+  transform: scale(1.05);
+}
+
+.import-button {
+  background-color: #10b981;
+  color: white;
+}
+
+.import-button:hover {
+  background-color: #059669;
+  transform: scale(1.05);
+}
+
+.import-message {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.import-message.error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #ef4444;
+}
+
+.dark .import-message {
+  background-color: #064e3b;
+  color: #d1fae5;
+}
+
+.dark .import-message.error {
+  background-color: #7f1d1d;
+  color: #fee2e2;
 }
 </style>

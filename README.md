@@ -28,6 +28,12 @@ An adaptive learning web application for mastering the Persian alphabet, featuri
 - **High DPI optimized** layout
 - **RTL text rendering** with proper letter connections
 
+### 💾 Data Management
+- **Export Progress**: Download your learning data as a JSON file
+- **Import Progress**: Restore your progress on any device
+- **Date-stamped exports**: Each export includes the date in the filename
+- **Progress portability**: Easy transfer between local and online versions
+
 ## Technology Stack
 
 - **Vue 3** with Composition API
@@ -83,6 +89,24 @@ The app uses an intelligent progression system that unlocks letters based on you
 - At least 80% of active letters have been practiced
 
 Each letter form (isolated, initial, medial, final) is tracked separately because Persian letters change significantly between positions. The system won't overwhelm you - if you're struggling, it waits until you're ready before adding new letters.
+
+## Migrating Your Progress
+
+To transfer your progress (e.g., from local development to the online version):
+
+1. **Export from your current version**:
+   - Go to the Progress page
+   - Scroll to "Data Management" 
+   - Click "Export Progress"
+   - Save the JSON file
+
+2. **Import to the new version**:
+   - Go to the Progress page
+   - Click "Import Progress"
+   - Select your saved JSON file
+   - Your progress will be restored instantly
+
+This is especially useful when moving from `localhost` to the GitHub Pages version at https://jotoft.github.io/aleph/
 
 ## Development Guide
 
