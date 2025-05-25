@@ -110,6 +110,32 @@ private readonly MASTERY_THRESHOLDS = {
 - Persian text uses Vazir font (loaded from CDN)
 - Responsive breakpoints mainly removed (optimized for laptop)
 
+#### RTL Text Considerations
+When highlighting or styling individual Persian/Arabic letters:
+- **Never add padding** - it breaks letter connections
+- **Never change font-weight** - it disrupts text shaping
+- **Use `dir="rtl"`** on container elements for proper text flow
+- **Color changes only** for highlighting individual letters
+- **Dynamically generated content** (via v-html) needs global styles or `:deep()` selector
+
+Example of safe highlighting:
+```css
+/* Global style block for dynamic content */
+<style>
+.word-persian mark {
+  background-color: transparent;
+  color: #dc2626;
+  /* NO padding, margin, font-weight, or border */
+}
+</style>
+```
+
+Common pitfalls that break Persian text rendering:
+- Wrapping individual letters in elements with padding/margin
+- Changing font properties mid-word
+- Using borders or outlines on inline elements
+- Not setting proper RTL direction
+
 ## Common Tasks
 
 ### Reset Progress
@@ -131,13 +157,23 @@ When adding letters, include Swedish comparisons that are more accurate than Eng
 - Use Swedish words as reference: "som 'x' i 'svenskt ord'"
 - Note special Swedish sounds that match Persian better
 
-### Implement Letter Progression
-Future task - suggested grouping:
-1. Simple distinct letters (ا، د، ر، ز، و)
-2. Similar-looking groups (ب پ ت ث)
-3. Connecting letters with complex forms
-4. Letters with dots below (چ، ژ)
-5. Less common letters
+### Letter Progression System (Implemented)
+The app uses an adaptive progression system that introduces new letters based on mastery:
+
+1. **Starts with 5 core letters**: alef (ا), beh (ب), sin (س), mim (م), dal (د)
+2. **Unlocks new groups when ready**: 
+   - Requires 70% average accuracy on current letters
+   - Each letter needs at least 5 practice attempts
+   - At least 80% of active letters must be practiced
+3. **Progression groups**:
+   - Group 1: Most distinct letters (alef, beh, sin, mim, dal)
+   - Group 2: Common letters (nun, lam, reh, yeh, vav)
+   - Group 3: Letters with dots (teh, peh, jim, cheh)
+   - Group 4: Complex shapes (kaf, heh, ain, ghain)
+   - Group 5: Similar pairs (zeh, zheh, sad, zad)
+   - Group 6: Less common (kheh, shin, feh, qaf)
+   - Group 7: Remaining letters
+4. **Prevents overload**: Won't add new letters if struggling with current ones
 
 ## Architecture Decisions
 

@@ -26,6 +26,7 @@ export class AdaptiveQuestionGenerator {
   private config: GeneratorConfig;
   private recentQuestions: Question[] = [];
   private readonly MAX_RECENT_QUESTIONS = 10;
+  private letterProgressionGroups: string[][];
   
   // Quiz type weights based on mastery level
   private readonly QUIZ_TYPE_WEIGHTS = {
@@ -65,6 +66,24 @@ export class AdaptiveQuestionGenerator {
       adaptiveDifficulty: true,
       ...config
     };
+    
+    // Define letter progression groups (from easiest/most distinct to harder/similar)
+    this.letterProgressionGroups = [
+      // Group 1: Most distinct, common letters
+      ['alef', 'beh', 'sin', 'mim', 'dal'],
+      // Group 2: More common letters
+      ['nun', 'lam', 'reh', 'yeh', 'vav'],
+      // Group 3: Letters with dots
+      ['teh', 'peh', 'jim', 'cheh'],
+      // Group 4: More complex shapes
+      ['kaf', 'heh', 'ain', 'ghain'],
+      // Group 5: Similar looking pairs
+      ['zeh', 'zheh', 'sad', 'zad'],
+      // Group 6: Less common
+      ['kheh', 'shin', 'feh', 'qaf'],
+      // Group 7: Remaining letters
+      ['theh', 'heh-jimi', 'tah', 'zah', 'gaf', 'hamzeh']
+    ];
   }
 
   generateQuestion(): Question {
@@ -81,51 +100,136 @@ export class AdaptiveQuestionGenerator {
     return question;
   }
 
-  private selectLetterAndForm(): { letter: PersianLetter; form: LetterForm } {
-    // Get letters needing practice
-    const needsPractice = this.tracker.getLettersNeedingPractice(20);
+  private getActiveLetters(): string[] {
+    const activeLetters: string[] = [];
+    let shouldAddNewGroup = true;
     
-    // Filter to only enabled letters
-    const enabledNeedsPractice = needsPractice.filter(np => 
-      this.config.enabledLetterIds.includes(np.letterId)
-    );
-
-    // Build weighted selection pool
-    const selectionPool: Array<{ letter: PersianLetter; form: LetterForm; weight: number }> = [];
-    
-    for (const { letterId, form, score } of enabledNeedsPractice) {
-      const letter = persianLetters.find(l => l.id === letterId);
-      if (!letter) continue;
-
-      // Base weight inversely proportional to score (lower score = higher weight)
-      let weight = 1 - score;
-
-      // Boost weight for confusion pairs
-      const confusions = this.tracker.getConfusionPairs(letterId);
-      if (confusions.length > 0) {
-        weight *= this.config.confusionPairBoost;
+    // Go through each progression group
+    for (let groupIndex = 0; groupIndex < this.letterProgressionGroups.length; groupIndex++) {
+      const group = this.letterProgressionGroups[groupIndex];
+      
+      // Always include the first group (starter letters)
+      if (groupIndex === 0) {
+        activeLetters.push(...group);
+        continue;
       }
-
-      // Apply form progression rules
-      if (this.config.formProgressionEnabled) {
+      
+      // For other groups, check if we should add them
+      if (!shouldAddNewGroup) break;
+      
+      // Calculate average mastery of all active letters
+      let totalMastery = 0;
+      let letterCount = 0;
+      
+      for (const letterId of activeLetters) {
         const mastery = this.tracker.getLetterMastery(letterId);
         if (mastery) {
-          // Reduce weight for advanced forms if basic forms aren't mastered
-          if (form === 'medial' && mastery.forms.isolated.exposures < 5) {
-            weight *= 0.3;
-          } else if (form === 'initial' && mastery.forms.isolated.exposures < 3) {
-            weight *= 0.5;
+          // Get overall accuracy across all forms
+          let totalExposures = 0;
+          let totalCorrect = 0;
+          
+          Object.values(mastery.forms).forEach(form => {
+            totalExposures += form.exposures;
+            totalCorrect += form.correctAnswers;
+          });
+          
+          if (totalExposures > 0) {
+            const accuracy = totalCorrect / totalExposures;
+            // Only count letters with at least 5 exposures
+            if (totalExposures >= 5) {
+              totalMastery += accuracy;
+              letterCount++;
+            }
           }
         }
       }
-
-      // Avoid recently asked questions
-      const recentCount = this.recentQuestions.filter(
-        q => q.letter.id === letterId && q.form === form
-      ).length;
-      weight *= Math.pow(0.7, recentCount);
-
-      selectionPool.push({ letter, form, weight });
+      
+      // Calculate average mastery
+      const avgMastery = letterCount > 0 ? totalMastery / letterCount : 0;
+      
+      // Need at least 70% average mastery and minimum practice before adding new letters
+      if (avgMastery >= this.config.minMasteryForNewLetter && letterCount >= activeLetters.length * 0.8) {
+        activeLetters.push(...group);
+      } else {
+        shouldAddNewGroup = false;
+      }
+    }
+    
+    return activeLetters;
+  }
+  
+  private selectLetterAndForm(): { letter: PersianLetter; form: LetterForm } {
+    // Get dynamically calculated active letters based on mastery
+    const lettersToUse = this.getActiveLetters();
+    
+    // Get enabled letters from our progression
+    const enabledLetters = persianLetters.filter(l => 
+      lettersToUse.includes(l.id)
+    );
+    
+    // Build weighted selection pool
+    const selectionPool: Array<{ letter: PersianLetter; form: LetterForm; weight: number }> = [];
+    const forms: LetterForm[] = ['isolated', 'initial', 'medial', 'final'];
+    
+    for (const letter of enabledLetters) {
+      const mastery = this.tracker.getLetterMastery(letter.id);
+      
+      for (const form of forms) {
+        let weight = 1.0;
+        
+        if (mastery) {
+          const formData = mastery.forms[form];
+          const accuracy = formData.exposures > 0 
+            ? formData.correctAnswers / formData.exposures 
+            : 0;
+          
+          // Base weight: prioritize low accuracy and low exposure
+          if (formData.exposures === 0) {
+            weight = 2.0; // Unasked forms get high priority
+          } else if (formData.exposures < 3) {
+            weight = 1.5; // New forms get moderate priority
+          } else {
+            // Weight based on accuracy (lower accuracy = higher weight)
+            weight = Math.max(0.1, 1 - accuracy);
+          }
+          
+          // Boost weight for confusion pairs
+          const confusions = this.tracker.getConfusionPairs(letter.id);
+          if (confusions.length > 0) {
+            weight *= this.config.confusionPairBoost;
+          }
+          
+          // Apply form progression rules
+          if (this.config.formProgressionEnabled) {
+            // Reduce weight for advanced forms if basic forms aren't mastered
+            if (form === 'medial' && mastery.forms.isolated.exposures < 5) {
+              weight *= 0.3;
+            } else if (form === 'initial' && mastery.forms.isolated.exposures < 3) {
+              weight *= 0.5;
+            } else if (form === 'final' && mastery.forms.isolated.exposures < 3) {
+              weight *= 0.5;
+            }
+          }
+        } else {
+          // No mastery data = high priority for isolated form, lower for others
+          weight = form === 'isolated' ? 3.0 : 1.0;
+        }
+        
+        // Avoid recently asked questions - but less strict in the beginning
+        const recentCount = this.recentQuestions.filter(
+          q => q.letter.id === letter.id && q.form === form
+        ).length;
+        if (recentCount > 0) {
+          // Less penalty when we have fewer letters to work with
+          const recentPenalty = lettersToUse.length <= 4 ? 0.5 : 0.3;
+          weight *= Math.pow(recentPenalty, recentCount);
+        }
+        
+        // Only add if weight is significant
+        if (weight > 0.01) {
+          selectionPool.push({ letter, form, weight });
+        }
+      }
     }
 
     // If pool is empty, select randomly from enabled letters
@@ -406,34 +510,66 @@ export class AdaptiveQuestionGenerator {
   }
 
   suggestNewLetters(): string[] {
-    const suggestions: string[] = [];
-    const allMastery = this.tracker.getAllMasteryData();
+    const activeLetters = this.getActiveLetters();
     
-    // Calculate average mastery of enabled letters
+    // Find the next group that could be added
+    for (const group of this.letterProgressionGroups) {
+      const newLettersInGroup = group.filter(letterId => !activeLetters.includes(letterId));
+      if (newLettersInGroup.length > 0) {
+        // Return up to 2 letters from the next group
+        return newLettersInGroup.slice(0, 2);
+      }
+    }
+    
+    return [];
+  }
+  
+  getProgressInfo(): { 
+    activeLetters: number; 
+    totalLetters: number; 
+    avgMastery: number;
+    readyForMore: boolean;
+    nextLetters: string[];
+  } {
+    const activeLetterIds = this.getActiveLetters();
+    
+    // Calculate average mastery of active letters
     let totalMastery = 0;
-    let enabledCount = 0;
+    let letterCount = 0;
+    let minExposures = Infinity;
     
-    for (const [letterId, mastery] of allMastery) {
-      if (this.config.enabledLetterIds.includes(letterId)) {
-        totalMastery += mastery.overallMastery;
-        enabledCount++;
+    for (const letterId of activeLetterIds) {
+      const mastery = this.tracker.getLetterMastery(letterId);
+      if (mastery) {
+        let totalExposures = 0;
+        let totalCorrect = 0;
+        
+        Object.values(mastery.forms).forEach(form => {
+          totalExposures += form.exposures;
+          totalCorrect += form.correctAnswers;
+        });
+        
+        minExposures = Math.min(minExposures, totalExposures);
+        
+        if (totalExposures >= 5) {
+          const accuracy = totalCorrect / totalExposures;
+          totalMastery += accuracy;
+          letterCount++;
+        }
       }
     }
     
-    const avgMastery = enabledCount > 0 ? totalMastery / enabledCount : 0;
+    const avgMastery = letterCount > 0 ? totalMastery / letterCount : 0;
+    const readyForMore = avgMastery >= this.config.minMasteryForNewLetter && 
+                        letterCount >= activeLetterIds.length * 0.8 &&
+                        minExposures >= 5; // All active letters have been practiced
     
-    // Suggest new letters if average mastery is high enough
-    if (avgMastery >= this.config.minMasteryForNewLetter) {
-      const availableLetters = persianLetters.filter(l => 
-        !this.config.enabledLetterIds.includes(l.id)
-      );
-      
-      // Suggest up to 2 new letters
-      for (let i = 0; i < Math.min(2, availableLetters.length); i++) {
-        suggestions.push(availableLetters[i].id);
-      }
-    }
-    
-    return suggestions;
+    return {
+      activeLetters: activeLetterIds.length,
+      totalLetters: persianLetters.length,
+      avgMastery: Math.round(avgMastery * 100),
+      readyForMore,
+      nextLetters: this.suggestNewLetters()
+    };
   }
 }
