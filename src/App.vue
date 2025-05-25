@@ -3,10 +3,11 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import LetterDisplay from './components/LetterDisplay.vue';
 import QuizMode from './components/QuizMode.vue';
 import MasteryProgress from './components/MasteryProgress.vue';
+import WordReadingDemo from './components/WordReadingDemo.vue';
 import { persianLetters } from './data/persianLetters';
 import { MasteryTracker } from './services/masteryTracking';
 
-const currentView = ref<'study' | 'quiz' | 'progress'>('study');
+const currentView = ref<'study' | 'quiz' | 'progress' | 'demo'>('study');
 const currentLetterIndex = ref(0);
 const currentLetter = ref(persianLetters[currentLetterIndex.value]);
 const isDarkMode = ref(false);
@@ -48,6 +49,33 @@ const loadMasteryData = () => {
   }
 };
 
+// Hidden feature: Press 'd' three times quickly to access word reading demo
+let dPressCount = 0;
+let dPressTimer: number | null = null;
+
+const handleKeyPress = (event: KeyboardEvent) => {
+  // Only trigger if 'd' is pressed without modifiers and not in an input
+  if (event.key === 'd' && !event.ctrlKey && !event.shiftKey && !event.altKey && 
+      event.target === document.body) {
+    dPressCount++;
+    
+    if (dPressTimer) {
+      clearTimeout(dPressTimer);
+    }
+    
+    if (dPressCount === 3) {
+      event.preventDefault();
+      currentView.value = 'demo';
+      dPressCount = 0;
+    } else {
+      // Reset counter after 1 second
+      dPressTimer = window.setTimeout(() => {
+        dPressCount = 0;
+      }, 1000);
+    }
+  }
+};
+
 const infiniteModeRef = ref(false);
 
 const startInfiniteMode = () => {
@@ -65,10 +93,14 @@ onMounted(() => {
   
   // Refresh mastery data when returning from quiz
   window.addEventListener('focus', loadMasteryData);
+  
+  // Add keyboard listener for hidden demo
+  window.addEventListener('keydown', handleKeyPress);
 });
 
 onUnmounted(() => {
   window.removeEventListener('focus', loadMasteryData);
+  window.removeEventListener('keydown', handleKeyPress);
 });
 </script>
 
@@ -150,6 +182,11 @@ onUnmounted(() => {
       
       <div v-else-if="currentView === 'progress'" class="progress-view">
         <MasteryProgress :mastery-data="masteryData" />
+      </div>
+      
+      <div v-else-if="currentView === 'demo'" class="demo-view">
+        <button @click="currentView = 'study'" class="back-button">← Back to Study</button>
+        <WordReadingDemo />
       </div>
     </main>
     
@@ -459,6 +496,30 @@ onUnmounted(() => {
 
 .app.dark .app-footer a:hover {
   color: #93bbfc;
+}
+
+.demo-view {
+  position: relative;
+  width: 100%;
+}
+
+.back-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.875rem;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: #2563eb;
 }
 
 /* Mobile optimizations */

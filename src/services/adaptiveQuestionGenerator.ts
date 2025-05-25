@@ -14,6 +14,8 @@ export interface Question {
   targetLetterIndex?: number; // For word context questions
   wordId?: string; // For word reading questions
   currentLetterIndex?: number; // For word reading - which letter we're asking about
+  wordLetters?: PersianLetter[]; // All letters in the word for word reading
+  isLastLetterInWord?: boolean; // True when reading the last letter
 }
 
 export interface GeneratorConfig {
@@ -128,7 +130,7 @@ export class AdaptiveQuestionGenerator {
     return question;
   }
 
-  private getActiveLetters(): string[] {
+  getActiveLetters(): string[] {
     const activeLetters: string[] = [];
     let shouldAddNewGroup = true;
     
@@ -637,7 +639,7 @@ export class AdaptiveQuestionGenerator {
     return Math.random() < wordReadingProbability;
   }
 
-  private createWordReadingQuestion(): Question {
+  private createWordReadingQuestion(startIndex: number = 0): Question {
     // Select a word based on known letters
     const word = this.wordProgressionService.selectNextWord(this.recentWordIds);
     
@@ -647,13 +649,14 @@ export class AdaptiveQuestionGenerator {
       return this.createLetterRecognitionQuestion(letter, form);
     }
     
-    // Add to recent words
-    this.recentWordIds = [...this.recentWordIds.slice(-4), word.id];
-    
-    // Select a random letter from the word to ask about
-    const letterOptions: { letter: PersianLetter; index: number }[] = [];
+    // Add to recent words only when starting a new word
+    if (startIndex === 0) {
+      this.recentWordIds = [...this.recentWordIds.slice(-4), word.id];
+    }
     
     // Find all letters in the word
+    const letterOptions: { letter: PersianLetter; index: number }[] = [];
+    
     for (let i = 0; i < word.persian.length; i++) {
       const char = word.persian[i];
       
@@ -672,8 +675,9 @@ export class AdaptiveQuestionGenerator {
       return this.createLetterRecognitionQuestion(letter, form);
     }
     
-    // Select a random letter from the word
-    const selected = letterOptions[Math.floor(Math.random() * letterOptions.length)];
+    // For word reading, we go through letters in order (RTL, so start from index 0)
+    const currentIndex = Math.min(startIndex, letterOptions.length - 1);
+    const selected = letterOptions[currentIndex];
     
     // Create distractors
     const options = [selected.letter.nameEn];
@@ -691,7 +695,9 @@ export class AdaptiveQuestionGenerator {
         meaning: word.meaning
       },
       wordId: word.id,
-      currentLetterIndex: selected.index
+      currentLetterIndex: selected.index,
+      wordLetters: letterOptions.map(opt => opt.letter),
+      isLastLetterInWord: currentIndex === letterOptions.length - 1
     };
   }
 }

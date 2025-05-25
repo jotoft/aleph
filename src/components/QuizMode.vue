@@ -62,15 +62,20 @@
           <div v-else-if="currentQuestion.type === 'wordReading'" class="question">
             <div class="word-display" v-if="currentQuestion.word">
               <p class="word-persian" dir="rtl" v-html="highlightedWordForReading"></p>
+              <div class="word-progress" v-if="wordReadingLetters.length > 0">
+                <span v-for="(_, index) in wordReadingLetters" :key="index"
+                      :class="{ 'completed': index < currentWordProgress, 'current': index === currentWordProgress }"
+                      class="progress-dot">●</span>
+              </div>
               <transition name="fade">
-                <div v-if="answered && isCorrect" class="word-info">
+                <div v-if="currentQuestion.isLastLetterInWord && answered && isCorrect" class="word-info">
                   <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
                   <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
                 </div>
               </transition>
             </div>
             <p class="question-text">What is the highlighted letter?</p>
-            <p class="hint" v-if="!answered">Read the word letter by letter</p>
+            <p class="hint" v-if="!answered">Letter {{ currentWordProgress + 1 }} of {{ wordReadingLetters.length }}</p>
           </div>
 
           <!-- Answer Options -->
@@ -209,6 +214,11 @@ const quizComplete = ref(false);
 const autoProgressTimeout = ref<number | null>(null);
 const confusedWith = ref<{ letterId: string; form?: string } | null>(null);
 
+// Word reading state
+const currentWordId = ref<string | null>(null);
+const currentWordProgress = ref<number>(0); // Which letter we're on
+const wordReadingLetters = ref<PersianLetter[]>([]);
+
 const successMessages = [
   'Excellent! 🌟',
   'Great job! 👏',
@@ -278,7 +288,61 @@ function getLetterForm(letter: PersianLetter, form: string): string {
 }
 
 function generateNextQuestion() {
-  currentQuestion.value = questionGenerator.value.generateQuestion();
+  const question = questionGenerator.value.generateQuestion();
+  currentQuestion.value = question;
+  
+  // If it's a new word reading question, initialize the word state
+  if (question.type === 'wordReading' && question.wordId && question.wordLetters) {
+    currentWordId.value = question.wordId;
+    currentWordProgress.value = 0;
+    wordReadingLetters.value = question.wordLetters;
+  }
+}
+
+function generateNextLetterInWord() {
+  if (!currentQuestion.value || !currentWordId.value) return;
+  
+  // Create a new question for the next letter in the word
+  const word = currentQuestion.value.word;
+  const wordId = currentWordId.value;
+  const wordLetters = wordReadingLetters.value;
+  
+  if (!word || currentWordProgress.value >= wordLetters.length) {
+    // Fallback to regular next question
+    nextQuestion();
+    return;
+  }
+  
+  // Find the letter at current position
+  const currentLetter = wordLetters[currentWordProgress.value];
+  if (!currentLetter) {
+    nextQuestion();
+    return;
+  }
+  
+  // Create distractors
+  const options = [currentLetter.nameEn];
+  const enabledLetters = persianLetters.filter(l => 
+    questionGenerator.value.getActiveLetters().includes(l.id) && l.id !== currentLetter.id
+  );
+  
+  // Get random distractors
+  const shuffled = [...enabledLetters].sort(() => Math.random() - 0.5);
+  const distractors = shuffled.slice(0, 3).map(l => l.nameEn);
+  options.push(...distractors);
+  
+  // Create the question for the current letter
+  currentQuestion.value = {
+    type: 'wordReading',
+    letter: currentLetter,
+    options: options.sort(() => Math.random() - 0.5),
+    correctAnswer: currentLetter.nameEn,
+    word: word,
+    wordId: wordId,
+    currentLetterIndex: currentWordProgress.value,
+    wordLetters: wordLetters,
+    isLastLetterInWord: currentWordProgress.value === wordLetters.length - 1
+  };
 }
 
 function selectAnswer(answer: string, _index?: number) {
@@ -364,6 +428,35 @@ function nextQuestion() {
   }
   
   confusedWith.value = null;
+  
+  // For word reading, check if we need to continue with the same word
+  if (currentQuestion.value?.type === 'wordReading' && 
+      isCorrect.value && 
+      !currentQuestion.value.isLastLetterInWord &&
+      currentQuestion.value.wordId) {
+    // Continue with the next letter in the same word
+    currentWordProgress.value++;
+    selectedAnswer.value = null;
+    answered.value = false;
+    isCorrect.value = false;
+    
+    // Generate next letter question for the same word
+    generateNextLetterInWord();
+    return;
+  }
+  
+  // If word reading failed, skip to next question
+  if (currentQuestion.value?.type === 'wordReading' && !isCorrect.value) {
+    // User got a letter wrong, move to next question
+    currentWordId.value = null;
+    currentWordProgress.value = 0;
+    wordReadingLetters.value = [];
+  }
+  
+  // Reset word reading state when moving to a new question
+  currentWordId.value = null;
+  currentWordProgress.value = 0;
+  wordReadingLetters.value = [];
   
   if (!isInfiniteMode.value && currentQuestionIndex.value >= totalQuestions.value - 1) {
     quizComplete.value = true;
@@ -892,6 +985,40 @@ onUnmounted(() => {
 .slide-up-enter-from {
   transform: translateY(20px);
   opacity: 0;
+}
+
+.word-progress {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.progress-dot {
+  font-size: 12px;
+  color: #9ca3af;
+  transition: color 0.3s;
+}
+
+.progress-dot.completed {
+  color: #10b981;
+}
+
+.progress-dot.current {
+  color: #3b82f6;
+  font-size: 16px;
+}
+
+.dark .progress-dot {
+  color: #4b5563;
+}
+
+.dark .progress-dot.completed {
+  color: #10b981;
+}
+
+.dark .progress-dot.current {
+  color: #60a5fa;
 }
 
 /* Mobile responsiveness */

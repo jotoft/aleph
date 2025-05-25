@@ -72,7 +72,6 @@ describe('AdaptiveQuestionGenerator', () => {
       // 'dal' should appear significantly more frequently
       const dalCount = letterCounts['dal'] || 0;
       const alefCount = letterCounts['alef'] || 0;
-      const behCount = letterCounts['beh'] || 0;
       
       // dal should appear more than the well-performing letters
       // (relaxed the constraint since word reading may affect distribution)
