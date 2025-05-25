@@ -1,16 +1,19 @@
 import { MasteryTracker, type LetterForm } from './masteryTracking';
 import { persianLetters, type PersianLetter } from '../data/persianLetters';
+import { WordProgressionService } from './wordProgressionService';
 
-export type QuizType = 'letterRecognition' | 'nameToLetter' | 'formRecognition' | 'wordContext';
+export type QuizType = 'letterRecognition' | 'nameToLetter' | 'formRecognition' | 'wordContext' | 'wordReading';
 
 export interface Question {
   type: QuizType;
-  letter: PersianLetter;
+  letter?: PersianLetter; // Optional for word reading
   form?: LetterForm;
   options: string[];
   correctAnswer: string;
   word?: { persian: string; transliteration: string; meaning: string };
   targetLetterIndex?: number; // For word context questions
+  wordId?: string; // For word reading questions
+  currentLetterIndex?: number; // For word reading - which letter we're asking about
 }
 
 export interface GeneratorConfig {
@@ -27,32 +30,38 @@ export class AdaptiveQuestionGenerator {
   private recentQuestions: Question[] = [];
   private readonly MAX_RECENT_QUESTIONS = 10;
   private letterProgressionGroups: string[][];
+  public wordProgressionService: WordProgressionService;
+  private recentWordIds: string[] = [];
   
   // Quiz type weights based on mastery level
   private readonly QUIZ_TYPE_WEIGHTS = {
     learning: {
-      letterRecognition: 0.5,
-      nameToLetter: 0.3,
+      letterRecognition: 0.45,
+      nameToLetter: 0.25,
       formRecognition: 0.15,
-      wordContext: 0.05
+      wordContext: 0.05,
+      wordReading: 0.1
     },
     familiar: {
-      letterRecognition: 0.3,
-      nameToLetter: 0.3,
-      formRecognition: 0.25,
-      wordContext: 0.15
+      letterRecognition: 0.25,
+      nameToLetter: 0.25,
+      formRecognition: 0.2,
+      wordContext: 0.15,
+      wordReading: 0.15
     },
     proficient: {
-      letterRecognition: 0.2,
-      nameToLetter: 0.2,
-      formRecognition: 0.3,
-      wordContext: 0.3
+      letterRecognition: 0.15,
+      nameToLetter: 0.15,
+      formRecognition: 0.25,
+      wordContext: 0.25,
+      wordReading: 0.2
     },
     mastered: {
       letterRecognition: 0.1,
       nameToLetter: 0.1,
-      formRecognition: 0.3,
-      wordContext: 0.5
+      formRecognition: 0.2,
+      wordContext: 0.3,
+      wordReading: 0.3
     }
   };
 
@@ -66,6 +75,9 @@ export class AdaptiveQuestionGenerator {
       adaptiveDifficulty: true,
       ...config
     };
+    
+    // Initialize word progression service
+    this.wordProgressionService = new WordProgressionService(tracker);
     
     // Define letter progression groups (from easiest/most distinct to harder/similar)
     this.letterProgressionGroups = [
@@ -87,6 +99,22 @@ export class AdaptiveQuestionGenerator {
   }
 
   generateQuestion(): Question {
+    // First, decide if we should do word reading based on overall mastery
+    const shouldDoWordReading = this.shouldSelectWordReading();
+    
+    if (shouldDoWordReading) {
+      const question = this.createWordReadingQuestion();
+      
+      // Track recent questions to avoid repetition
+      this.recentQuestions.push(question);
+      if (this.recentQuestions.length > this.MAX_RECENT_QUESTIONS) {
+        this.recentQuestions.shift();
+      }
+      
+      return question;
+    }
+    
+    // Otherwise, use the traditional flow
     const letterAndForm = this.selectLetterAndForm();
     const quizType = this.selectQuizType(letterAndForm.letter, letterAndForm.form);
     const question = this.createQuestion(letterAndForm.letter, letterAndForm.form, quizType);
@@ -217,7 +245,7 @@ export class AdaptiveQuestionGenerator {
         
         // Avoid recently asked questions - but less strict in the beginning
         const recentCount = this.recentQuestions.filter(
-          q => q.letter.id === letter.id && q.form === form
+          q => q.letter && q.letter.id === letter.id && q.form === form
         ).length;
         if (recentCount > 0) {
           // Less penalty when we have fewer letters to work with
@@ -331,6 +359,9 @@ export class AdaptiveQuestionGenerator {
       
       case 'wordContext':
         return this.createWordContextQuestion(letter, form);
+      
+      case 'wordReading':
+        return this.createWordReadingQuestion();
     }
   }
 
@@ -570,6 +601,97 @@ export class AdaptiveQuestionGenerator {
       avgMastery: Math.round(avgMastery * 100),
       readyForMore,
       nextLetters: this.suggestNewLetters()
+    };
+  }
+
+  private shouldSelectWordReading(): boolean {
+    // Get overall average mastery
+    const activeLetters = this.getActiveLetters();
+    if (activeLetters.length < 3) return false; // Need at least a few letters
+    
+    let totalMastery = 0;
+    let letterCount = 0;
+    
+    for (const letterId of activeLetters) {
+      const mastery = this.tracker.getLetterMastery(letterId);
+      if (mastery && mastery.overallMastery > 0) {
+        totalMastery += mastery.overallMastery;
+        letterCount++;
+      }
+    }
+    
+    if (letterCount === 0) return false;
+    
+    const avgMastery = totalMastery / letterCount;
+    
+    // Use word reading probability based on average mastery
+    // 0-40% mastery: 10% chance
+    // 40-60% mastery: 15% chance  
+    // 60-80% mastery: 20% chance
+    // 80%+ mastery: 30% chance
+    let wordReadingProbability = 0.1;
+    if (avgMastery >= 0.8) wordReadingProbability = 0.3;
+    else if (avgMastery >= 0.6) wordReadingProbability = 0.2;
+    else if (avgMastery >= 0.4) wordReadingProbability = 0.15;
+    
+    return Math.random() < wordReadingProbability;
+  }
+
+  private createWordReadingQuestion(): Question {
+    // Select a word based on known letters
+    const word = this.wordProgressionService.selectNextWord(this.recentWordIds);
+    
+    if (!word) {
+      // Fallback to a simple letter recognition question if no words available
+      const { letter, form } = this.selectLetterAndForm();
+      return this.createLetterRecognitionQuestion(letter, form);
+    }
+    
+    // Add to recent words
+    this.recentWordIds = [...this.recentWordIds.slice(-4), word.id];
+    
+    // Select a random letter from the word to ask about
+    const letterOptions: { letter: PersianLetter; index: number }[] = [];
+    
+    // Find all letters in the word
+    for (let i = 0; i < word.persian.length; i++) {
+      const char = word.persian[i];
+      
+      // Find which letter this character belongs to
+      for (const letter of persianLetters) {
+        if ([letter.isolated, letter.initial, letter.medial, letter.final].includes(char)) {
+          letterOptions.push({ letter, index: i });
+          break;
+        }
+      }
+    }
+    
+    if (letterOptions.length === 0) {
+      // Fallback if we can't find letters
+      const { letter, form } = this.selectLetterAndForm();
+      return this.createLetterRecognitionQuestion(letter, form);
+    }
+    
+    // Select a random letter from the word
+    const selected = letterOptions[Math.floor(Math.random() * letterOptions.length)];
+    
+    // Create distractors
+    const options = [selected.letter.nameEn];
+    const distractors = this.getSmartDistracters(selected.letter.id, 'nameEn', 3);
+    options.push(...distractors);
+    
+    return {
+      type: 'wordReading',
+      letter: selected.letter,
+      options: this.shuffleArray(options),
+      correctAnswer: selected.letter.nameEn,
+      word: {
+        persian: word.persian,
+        transliteration: word.transliteration,
+        meaning: word.meaning
+      },
+      wordId: word.id,
+      currentLetterIndex: selected.index
     };
   }
 }

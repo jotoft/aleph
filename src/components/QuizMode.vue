@@ -26,19 +26,19 @@
           <h3 class="question-type">{{ getQuestionTypeLabel(currentQuestion.type) }}</h3>
           
           <!-- Letter Recognition Quiz -->
-          <div v-if="currentQuestion.type === 'letterRecognition'" class="question">
+          <div v-if="currentQuestion.type === 'letterRecognition' && currentQuestion.letter" class="question">
             <div class="letter-display-large">{{ getLetterForm(currentQuestion.letter, currentQuestion.form || 'isolated') }}</div>
             <p class="question-text">What letter is this?</p>
           </div>
 
           <!-- Name to Letter Quiz -->
-          <div v-else-if="currentQuestion.type === 'nameToLetter'" class="question">
+          <div v-else-if="currentQuestion.type === 'nameToLetter' && currentQuestion.letter" class="question">
             <p class="question-text-large">Find the letter "{{ currentQuestion.letter.nameEn }}"</p>
             <p class="hint">{{ currentQuestion.letter.nameFa }}</p>
           </div>
 
           <!-- Form Recognition Quiz -->
-          <div v-else-if="currentQuestion.type === 'formRecognition'" class="question">
+          <div v-else-if="currentQuestion.type === 'formRecognition' && currentQuestion.letter" class="question">
             <div class="letter-display-large">{{ getLetterForm(currentQuestion.letter, currentQuestion.form || 'isolated') }}</div>
             <p class="question-text">What form is this letter in?</p>
             <p class="hint">Letter: {{ currentQuestion.letter.nameEn }}</p>
@@ -56,6 +56,21 @@
               </transition>
             </div>
             <p class="question-text">Which letter is highlighted?</p>
+          </div>
+          
+          <!-- Word Reading Quiz -->
+          <div v-else-if="currentQuestion.type === 'wordReading'" class="question">
+            <div class="word-display" v-if="currentQuestion.word">
+              <p class="word-persian" dir="rtl" v-html="highlightedWordForReading"></p>
+              <transition name="fade">
+                <div v-if="answered && isCorrect" class="word-info">
+                  <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
+                  <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
+                </div>
+              </transition>
+            </div>
+            <p class="question-text">What is the highlighted letter?</p>
+            <p class="hint" v-if="!answered">Read the word letter by letter</p>
           </div>
 
           <!-- Answer Options -->
@@ -156,11 +171,27 @@ const loadMasteryData = () => {
       console.error('Failed to load mastery data:', e);
     }
   }
+  
+  // Also load word progression data
+  const wordData = localStorage.getItem('wordProgressionData');
+  if (wordData && questionGenerator.value) {
+    try {
+      questionGenerator.value.wordProgressionService.deserialize(wordData);
+    } catch (e) {
+      console.error('Failed to load word progression data:', e);
+    }
+  }
 };
 
 // Save mastery data
 const saveMasteryData = () => {
   localStorage.setItem('masteryData', masteryTracker.serializeToJSON());
+  
+  // Also save word progression data
+  if (questionGenerator.value) {
+    localStorage.setItem('wordProgressionData', 
+      questionGenerator.value.wordProgressionService.serialize());
+  }
 };
 
 const isInfiniteMode = ref(false);
@@ -208,6 +239,25 @@ const highlightedWord = computed(() => {
   return `${before}<mark class="highlighted-letter">${letter}</mark>${after}`;
 });
 
+const highlightedWordForReading = computed(() => {
+  if (!currentQuestion.value || 
+      currentQuestion.value.type !== 'wordReading' || 
+      !currentQuestion.value.word ||
+      currentQuestion.value.currentLetterIndex === undefined ||
+      currentQuestion.value.currentLetterIndex < 0) {
+    return currentQuestion.value?.word?.persian || '';
+  }
+  
+  const word = currentQuestion.value.word.persian;
+  const index = currentQuestion.value.currentLetterIndex;
+  
+  const before = word.substring(0, index);
+  const letter = word.substring(index, index + 1);
+  const after = word.substring(index + 1);
+  
+  return `${before}<mark class="highlighted-letter">${letter}</mark>${after}`;
+});
+
 function getSuccessMessage() {
   return successMessages[Math.floor(Math.random() * successMessages.length)];
 }
@@ -218,6 +268,7 @@ function getQuestionTypeLabel(type: string): string {
     case 'nameToLetter': return 'Find the Letter';
     case 'formRecognition': return 'Form Recognition';
     case 'wordContext': return 'Letter in Context';
+    case 'wordReading': return 'Word Reading';
     default: return 'Question';
   }
 }
@@ -268,15 +319,29 @@ function selectAnswer(answer: string, _index?: number) {
   }
   
   // Record attempt in mastery tracker
-  const context = currentQuestion.value.word ? 'inWord' : 'standalone';
-  masteryTracker.recordAttempt(
-    currentQuestion.value.letter.id,
-    currentQuestion.value.form || 'isolated',
-    isCorrect.value,
-    context,
-    confusedWith.value?.letterId,
-    confusedWith.value?.form as any
-  );
+  if (currentQuestion.value.type === 'wordReading' && currentQuestion.value.wordId) {
+    // Track word mastery
+    const responseTime = Date.now() - (answered.value ? Date.now() - 1000 : Date.now()); // Simple approximation
+    questionGenerator.value.wordProgressionService.updateWordMastery(
+      currentQuestion.value.wordId,
+      isCorrect.value,
+      responseTime,
+      confusedWith.value?.letterId
+    );
+  }
+  
+  // Always track letter mastery if we have a letter
+  if (currentQuestion.value.letter) {
+    const context = currentQuestion.value.word ? 'inWord' : 'standalone';
+    masteryTracker.recordAttempt(
+      currentQuestion.value.letter.id,
+      currentQuestion.value.form || 'isolated',
+      isCorrect.value,
+      context,
+      confusedWith.value?.letterId,
+      confusedWith.value?.form as any
+    );
+  }
   
   // Save mastery data
   saveMasteryData();
