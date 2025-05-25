@@ -277,6 +277,29 @@ export class AdaptiveQuestionGenerator {
       Math.floor(Math.random() * letter.exampleWords.length)
     ];
 
+    // Find the position of the letter in the word
+    const letterForm = letter[form];
+    let targetLetterIndex = -1;
+    
+    // Search for the letter form in the word
+    for (let i = 0; i < wordData.word.length; i++) {
+      if (wordData.word[i] === letterForm) {
+        targetLetterIndex = i;
+        break;
+      }
+    }
+    
+    // If specific form not found, try to find any form of the letter
+    if (targetLetterIndex === -1) {
+      const allForms = [letter.isolated, letter.initial, letter.medial, letter.final];
+      for (let i = 0; i < wordData.word.length; i++) {
+        if (allForms.includes(wordData.word[i])) {
+          targetLetterIndex = i;
+          break;
+        }
+      }
+    }
+
     // For now, create a simple "identify the letter in word" question
     const options = [letter.nameEn];
     const distractors = this.getSmartDistracters(letter.id, 'nameEn', 3);
@@ -293,7 +316,7 @@ export class AdaptiveQuestionGenerator {
       },
       options: this.shuffleArray(options),
       correctAnswer: letter.nameEn,
-      targetLetterIndex: 0 // TODO: Calculate actual position
+      targetLetterIndex
     };
   }
 

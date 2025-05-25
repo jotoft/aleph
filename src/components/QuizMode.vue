@@ -47,7 +47,12 @@
           <!-- Word Context Quiz -->
           <div v-else-if="currentQuestion.type === 'wordContext'" class="question">
             <div class="word-display" v-if="currentQuestion.word">
-              <p class="word-persian">{{ currentQuestion.word.persian }}</p>
+              <p class="word-persian">
+                <span v-for="(char, index) in currentQuestion.word.persian" :key="index"
+                      :class="{ 'highlighted-letter': index === currentQuestion.targetLetterIndex }">
+                  {{ char }}
+                </span>
+              </p>
               <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
               <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
             </div>
@@ -498,6 +503,19 @@ onUnmounted(() => {
   font-family: 'Vazir', 'Arial', sans-serif;
   margin: 0 0 0.5rem 0;
   direction: rtl;
+}
+
+.word-persian .highlighted-letter {
+  background-color: #fbbf24;
+  color: #1f2937;
+  padding: 0 0.25rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.dark .word-persian .highlighted-letter {
+  background-color: #f59e0b;
+  color: #fef3c7;
 }
 
 .word-display .word-transliteration {
