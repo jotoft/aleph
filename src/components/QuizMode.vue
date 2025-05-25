@@ -963,10 +963,24 @@ onUnmounted(() => {
 .word-persian mark.highlighted-letter {
   background-color: transparent;
   color: #dc2626;
+  /* Reset any default mark styles */
+  padding: 0;
+  margin: 0;
+  font-weight: inherit;
+  font-style: inherit;
+  border: none;
+  outline: none;
 }
 
 .dark .word-persian mark.highlighted-letter {
   background-color: transparent;
   color: #fbbf24;
+  /* Reset any default mark styles */
+  padding: 0;
+  margin: 0;
+  font-weight: inherit;
+  font-style: inherit;
+  border: none;
+  outline: none;
 }
 </style>
