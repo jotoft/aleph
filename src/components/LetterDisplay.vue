@@ -71,7 +71,7 @@ defineProps<{
   height: 100%;
 }
 
-:global(.dark) .letter-display {
+.dark .letter-display {
   background-color: #374151;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
@@ -93,7 +93,7 @@ defineProps<{
   line-height: 1;
 }
 
-:global(.dark) .letter-isolated {
+.dark .letter-isolated {
   color: #e5e7eb;
 }
 
@@ -109,7 +109,7 @@ defineProps<{
   transition: color 0.3s;
 }
 
-:global(.dark) .letter-name {
+.dark .letter-name {
   color: #e5e7eb;
 }
 
@@ -120,7 +120,7 @@ defineProps<{
   transition: color 0.3s;
 }
 
-:global(.dark) .pronunciation {
+.dark .pronunciation {
   color: #9ca3af;
 }
 
@@ -131,7 +131,7 @@ defineProps<{
   transition: color 0.3s;
 }
 
-:global(.dark) .pronunciation-sv {
+.dark .pronunciation-sv {
   color: #3b82f6;
 }
 
@@ -157,7 +157,7 @@ defineProps<{
   font-size: 1rem;
 }
 
-:global(.dark) .letter-forms h3 {
+.dark .letter-forms h3 {
   color: #e5e7eb;
 }
 
@@ -182,7 +182,7 @@ defineProps<{
   transition: color 0.3s;
 }
 
-:global(.dark) .form-label {
+.dark .form-label {
   color: #9ca3af;
 }
 
@@ -195,7 +195,7 @@ defineProps<{
   direction: rtl;
 }
 
-:global(.dark) .form-letter {
+.dark .form-letter {
   color: #e5e7eb;
 }
 
@@ -213,7 +213,7 @@ defineProps<{
   font-size: 1rem;
 }
 
-:global(.dark) .example-words h3 {
+.dark .example-words h3 {
   color: #e5e7eb;
 }
 
@@ -233,7 +233,7 @@ defineProps<{
   transition: background-color 0.3s;
 }
 
-:global(.dark) .word-item {
+.dark .word-item {
   background-color: #4b5563;
 }
 
@@ -246,7 +246,7 @@ defineProps<{
   direction: rtl;
 }
 
-:global(.dark) .word-persian {
+.dark .word-persian {
   color: #e5e7eb;
 }
 
@@ -258,7 +258,7 @@ defineProps<{
   font-size: 0.85rem;
 }
 
-:global(.dark) .word-transliteration {
+.dark .word-transliteration {
   color: #9ca3af;
 }
 
@@ -270,7 +270,7 @@ defineProps<{
   font-size: 0.85rem;
 }
 
-:global(.dark) .word-meaning {
+.dark .word-meaning {
   color: #3b82f6;
 }
 

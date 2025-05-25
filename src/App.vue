@@ -30,20 +30,18 @@ const selectLetter = (index: number) => {
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value;
   localStorage.setItem('darkMode', isDarkMode.value.toString());
-  document.documentElement.classList.toggle('dark', isDarkMode.value);
 };
 
 onMounted(() => {
   const savedDarkMode = localStorage.getItem('darkMode');
   if (savedDarkMode === 'true') {
     isDarkMode.value = true;
-    document.documentElement.classList.add('dark');
   }
 });
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" :class="{ 'dark': isDarkMode }">
     <header class="app-header">
       <div class="header-top">
         <h1>Persian Alphabet Learning</h1>
@@ -115,7 +113,7 @@ onMounted(() => {
   flex-direction: column;
 }
 
-:global(.dark) .app {
+.app.dark {
   background-color: #1a1a1a;
 }
 
@@ -128,7 +126,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-:global(.dark) .app-header {
+.app.dark .app-header {
   background-color: #1f2937;
 }
 
@@ -184,7 +182,7 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-:global(.dark) .main-nav button {
+.app.dark .main-nav button {
   background-color: #374151;
 }
 
@@ -192,7 +190,7 @@ onMounted(() => {
   background-color: #4a5f7a;
 }
 
-:global(.dark) .main-nav button:hover {
+.app.dark .main-nav button:hover {
   background-color: #4b5563;
 }
 
@@ -200,7 +198,7 @@ onMounted(() => {
   background-color: #3498db;
 }
 
-:global(.dark) .main-nav button.active {
+.app.dark .main-nav button.active {
   background-color: #2563eb;
 }
 
@@ -231,7 +229,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-:global(.dark) .letter-navigation {
+.app.dark .letter-navigation {
   background-color: #374151;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
@@ -261,7 +259,7 @@ onMounted(() => {
   color: #2c3e50;
 }
 
-:global(.dark) .letter-counter {
+.app.dark .letter-counter {
   color: #e5e7eb;
 }
 
@@ -275,7 +273,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-:global(.dark) .letter-selector {
+.app.dark .letter-selector {
   background-color: #374151;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
@@ -287,7 +285,7 @@ onMounted(() => {
   font-size: 1rem;
 }
 
-:global(.dark) .letter-selector h3 {
+.app.dark .letter-selector h3 {
   color: #e5e7eb;
 }
 
@@ -311,7 +309,7 @@ onMounted(() => {
   color: #2c3e50;
 }
 
-:global(.dark) .letter-button {
+.app.dark .letter-button {
   background-color: #4b5563;
   border-color: #6b7280;
   color: #e5e7eb;
@@ -322,7 +320,7 @@ onMounted(() => {
   border-color: #3498db;
 }
 
-:global(.dark) .letter-button:hover {
+.app.dark .letter-button:hover {
   background-color: #6b7280;
   border-color: #3b82f6;
 }
@@ -344,7 +342,7 @@ onMounted(() => {
   transition: background-color 0.3s, box-shadow 0.3s;
 }
 
-:global(.dark) .quiz-mode {
+.app.dark .quiz-mode {
   background-color: #374151;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   color: #e5e7eb;

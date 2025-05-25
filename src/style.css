@@ -27,3 +27,8 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
+
+/* Global dark mode styles */
+.dark {
+  color-scheme: dark;
+}
