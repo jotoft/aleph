@@ -47,7 +47,7 @@
           <!-- Word Context Quiz -->
           <div v-else-if="currentQuestion.type === 'wordContext'" class="question">
             <div class="word-display" v-if="currentQuestion.word">
-              <p class="word-persian" v-html="highlightedWord"></p>
+              <p class="word-persian" dir="rtl" v-html="highlightedWord"></p>
               <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
               <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
             </div>
@@ -193,12 +193,10 @@ const highlightedWord = computed(() => {
   const word = currentQuestion.value.word.persian;
   const index = currentQuestion.value.targetLetterIndex;
   
-  // Use a zero-width space approach to maintain text shaping
   const before = word.substring(0, index);
   const letter = word.substring(index, index + 1);
   const after = word.substring(index + 1);
   
-  // Use mark tag which is semantic for highlighting and doesn't break text flow
   return `${before}<mark class="highlighted-letter">${letter}</mark>${after}`;
 });
 
@@ -521,18 +519,7 @@ onUnmounted(() => {
   direction: rtl;
 }
 
-.word-persian mark.highlighted-letter {
-  background-color: #fbbf24;
-  color: inherit;
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-  font-weight: normal;
-  display: inline;
-}
-
-.dark .word-persian mark.highlighted-letter {
-  background-color: #f59e0b;
-}
+/* Mark highlighting styles moved to global style block below */
 
 .word-display .word-transliteration {
   font-size: 1rem;
@@ -824,5 +811,18 @@ onUnmounted(() => {
 .slide-up-enter-from {
   transform: translateY(20px);
   opacity: 0;
+}
+</style>
+
+<style>
+/* Global styles for dynamically generated mark elements */
+.word-persian mark.highlighted-letter {
+  background-color: transparent;
+  color: #dc2626;
+}
+
+.dark .word-persian mark.highlighted-letter {
+  background-color: transparent;
+  color: #fbbf24;
 }
 </style>
