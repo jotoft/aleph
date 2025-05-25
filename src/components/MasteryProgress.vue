@@ -192,9 +192,9 @@ function importProgress(event: Event) {
   reader.onload = (e) => {
     try {
       const data = e.target?.result as string;
-      // Validate the data
-      const parsed = JSON.parse(data);
-      const tracker = MasteryTracker.deserializeFromJSON(data);
+      // Validate the data by trying to parse it
+      JSON.parse(data); // This will throw if invalid
+      MasteryTracker.deserializeFromJSON(data); // This validates the structure
       
       // Save to localStorage
       localStorage.setItem('masteryData', data);
