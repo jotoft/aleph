@@ -131,6 +131,10 @@ import { MasteryTracker } from '../services/masteryTracking';
 import { AdaptiveQuestionGenerator } from '../services/adaptiveQuestionGenerator';
 import type { Question } from '../services/adaptiveQuestionGenerator';
 
+const props = defineProps<{
+  startInfinite?: boolean
+}>();
+
 defineEmits<{
   close: []
 }>();
@@ -342,7 +346,11 @@ function handleKeyPress(event: KeyboardEvent) {
 
 onMounted(() => {
   loadMasteryData();
-  generateNextQuestion();
+  if (props.startInfinite) {
+    startNewQuiz(true);
+  } else {
+    generateNextQuestion();
+  }
   window.addEventListener('keydown', handleKeyPress);
 });
 

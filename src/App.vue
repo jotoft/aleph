@@ -48,6 +48,13 @@ const loadMasteryData = () => {
   }
 };
 
+const infiniteModeRef = ref(false);
+
+const startInfiniteMode = () => {
+  infiniteModeRef.value = true;
+  currentView.value = 'quiz';
+};
+
 
 onMounted(() => {
   const savedDarkMode = localStorage.getItem('darkMode');
@@ -93,6 +100,12 @@ onUnmounted(() => {
         >
           Progress
         </button>
+        <button 
+          @click="startInfiniteMode" 
+          class="infinite-mode-button"
+        >
+          ∞ Infinite
+        </button>
       </nav>
     </header>
 
@@ -129,7 +142,10 @@ onUnmounted(() => {
       </div>
 
       <div v-else-if="currentView === 'quiz'" class="quiz-mode">
-        <QuizMode @close="currentView = 'study'" />
+        <QuizMode 
+          @close="() => { currentView = 'study'; infiniteModeRef = false; }" 
+          :start-infinite="infiniteModeRef"
+        />
       </div>
       
       <div v-else-if="currentView === 'progress'" class="progress-view">
@@ -243,6 +259,22 @@ onUnmounted(() => {
 
 .app.dark .main-nav button.active {
   background-color: #2563eb;
+}
+
+.infinite-mode-button {
+  background-color: #10b981 !important;
+}
+
+.infinite-mode-button:hover {
+  background-color: #059669 !important;
+}
+
+.app.dark .infinite-mode-button {
+  background-color: #059669 !important;
+}
+
+.app.dark .infinite-mode-button:hover {
+  background-color: #047857 !important;
 }
 
 .app-main {
