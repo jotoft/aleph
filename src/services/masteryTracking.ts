@@ -157,12 +157,15 @@ export class MasteryTracker {
     let totalWeight = 0;
 
     Object.entries(mastery.forms).forEach(([form, formMastery]) => {
-      const accuracy = this.getFormAccuracy(formMastery);
-      const recencyBonus = this.getRecencyBonus(formMastery.lastSeen);
-      const weight = weights[form as LetterForm];
-      
-      weightedSum += accuracy * weight * recencyBonus;
-      totalWeight += weight * recencyBonus;
+      // Only include forms that have been attempted
+      if (formMastery.exposures > 0) {
+        const accuracy = this.getFormAccuracy(formMastery);
+        const recencyBonus = this.getRecencyBonus(formMastery.lastSeen);
+        const weight = weights[form as LetterForm];
+        
+        weightedSum += accuracy * weight * recencyBonus;
+        totalWeight += weight * recencyBonus;
+      }
     });
 
     mastery.overallMastery = totalWeight > 0 ? weightedSum / totalWeight : 0;
