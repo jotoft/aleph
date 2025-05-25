@@ -352,6 +352,11 @@ function selectAnswer(answer: string, _index?: number) {
   answered.value = true;
   isCorrect.value = answer === currentQuestion.value.correctAnswer;
   
+  // Remove focus from the button to prevent it staying highlighted
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+  
   // Find which letter was confused with (for incorrect answers)
   if (!isCorrect.value && currentQuestion.value.type === 'nameToLetter') {
     const confusedLetter = persianLetters.find(l => 
@@ -748,6 +753,15 @@ onUnmounted(() => {
 .answer-button:hover:not(:disabled) {
   border-color: #3b82f6;
   background-color: #eff6ff;
+}
+
+.answer-button:focus {
+  outline: none;
+}
+
+.answer-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 .dark .answer-button:hover:not(:disabled) {
