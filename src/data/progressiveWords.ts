@@ -5,6 +5,7 @@
 export interface ProgressiveWord {
   id: string;
   persian: string;
+  persianWithDiacritics?: string; // Persian text with vowel marks for beginners
   transliteration: string;
   meaning: string;
   requiredLetters: string[]; // Letter IDs that must be known
@@ -18,6 +19,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "ab",
     persian: "آب",
+    persianWithDiacritics: "آب",
     transliteration: "āb",
     meaning: "water",
     requiredLetters: ["alef", "beh"],
@@ -28,6 +30,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "bad",
     persian: "بد",
+    persianWithDiacritics: "بَد",
     transliteration: "bad",
     meaning: "bad",
     requiredLetters: ["beh", "dal"],
@@ -38,6 +41,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "man",
     persian: "من",
+    persianWithDiacritics: "مَن",
     transliteration: "man",
     meaning: "I/me",
     requiredLetters: ["mim", "nun"],
@@ -48,6 +52,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "sad",
     persian: "صد",
+    persianWithDiacritics: "صَد",
     transliteration: "sad",
     meaning: "hundred",
     requiredLetters: ["sad", "dal"],
@@ -58,6 +63,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "dam",
     persian: "دم",
+    persianWithDiacritics: "دَم",
     transliteration: "dam",
     meaning: "breath/moment",
     requiredLetters: ["dal", "mim"],
@@ -68,6 +74,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "bas",
     persian: "بس",
+    persianWithDiacritics: "بَس",
     transliteration: "bas",
     meaning: "enough",
     requiredLetters: ["beh", "sin"],
@@ -80,6 +87,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "dar",
     persian: "در",
+    persianWithDiacritics: "دَر",
     transliteration: "dar",
     meaning: "in/door",
     requiredLetters: ["dal", "reh"],
@@ -90,6 +98,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "del",
     persian: "دل",
+    persianWithDiacritics: "دِل",
     transliteration: "del",
     meaning: "heart",
     requiredLetters: ["dal", "lam"],
@@ -100,6 +109,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "sal",
     persian: "سال",
+    persianWithDiacritics: "سال",
     transliteration: "sāl",
     meaning: "year",
     requiredLetters: ["sin", "alef", "lam"],
@@ -110,6 +120,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "sar",
     persian: "سر",
+    persianWithDiacritics: "سَر",
     transliteration: "sar",
     meaning: "head",
     requiredLetters: ["sin", "reh"],
@@ -120,6 +131,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "nam",
     persian: "نام",
+    persianWithDiacritics: "نام",
     transliteration: "nām",
     meaning: "name",
     requiredLetters: ["nun", "alef", "mim"],
@@ -150,6 +162,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "dou",
     persian: "دو",
+    persianWithDiacritics: "دو",
     transliteration: "do",
     meaning: "two",
     requiredLetters: ["dal", "vav"],
@@ -182,6 +195,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "to",
     persian: "تو",
+    persianWithDiacritics: "تو",
     transliteration: "to",
     meaning: "you",
     requiredLetters: ["teh", "vav"],
@@ -192,6 +206,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "pa",
     persian: "پا",
+    persianWithDiacritics: "پا",
     transliteration: "pā",
     meaning: "foot",
     requiredLetters: ["peh", "alef"],
@@ -296,6 +311,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "salam",
     persian: "سلام",
+    persianWithDiacritics: "سَلام",
     transliteration: "salām",
     meaning: "hello/peace",
     requiredLetters: ["sin", "lam", "alef", "mim"],
@@ -328,6 +344,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "zan",
     persian: "زن",
+    persianWithDiacritics: "زَن",
     transliteration: "zan",
     meaning: "woman",
     requiredLetters: ["zeh", "nun"],
@@ -338,6 +355,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "mard",
     persian: "مرد",
+    persianWithDiacritics: "مَرد",
     transliteration: "mard",
     meaning: "man",
     requiredLetters: ["mim", "reh", "dal"],
@@ -368,6 +386,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "kar",
     persian: "کار",
+    persianWithDiacritics: "کار",
     transliteration: "kār",
     meaning: "work",
     requiredLetters: ["kaf", "alef", "reh"],
@@ -388,6 +407,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "doust",
     persian: "دوست",
+    persianWithDiacritics: "دوست",
     transliteration: "dust",
     meaning: "friend",
     requiredLetters: ["dal", "vav", "sin", "teh"],
@@ -398,6 +418,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "pedar",
     persian: "پدر",
+    persianWithDiacritics: "پِدَر",
     transliteration: "pedar",
     meaning: "father",
     requiredLetters: ["peh", "dal", "reh"],
@@ -408,6 +429,7 @@ export const progressiveWords: ProgressiveWord[] = [
   {
     id: "madar",
     persian: "مادر",
+    persianWithDiacritics: "مادَر",
     transliteration: "mādar",
     meaning: "mother",
     requiredLetters: ["mim", "alef", "dal", "reh"],

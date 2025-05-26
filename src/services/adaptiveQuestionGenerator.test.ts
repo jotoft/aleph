@@ -80,18 +80,19 @@ describe('AdaptiveQuestionGenerator', () => {
     });
 
     it('should use different quiz types based on mastery level', () => {
-      const letter = 'dal';
-      
-      // Build up mastery
-      for (let i = 0; i < 20; i++) {
-        tracker.recordAttempt(letter, 'isolated', true);
-        tracker.recordAttempt(letter, 'initial', true);
-        tracker.recordAttempt(letter, 'medial', true);
-        tracker.recordAttempt(letter, 'final', true);
+      // Build up mastery for multiple letters to enable word reading
+      const letters = ['alef', 'beh', 'dal', 'mim', 'sin'];
+      for (const letter of letters) {
+        for (let i = 0; i < 10; i++) {
+          tracker.recordAttempt(letter, 'isolated', true);
+          tracker.recordAttempt(letter, 'initial', true);
+          tracker.recordAttempt(letter, 'medial', true);
+          tracker.recordAttempt(letter, 'final', true);
+        }
       }
 
-      // Configure to use a small set of letters to ensure word context is possible
-      generator.updateConfig({ enabledLetterIds: ['alef', 'beh', 'dal', 'mim', 'sin'] });
+      // Configure to use these letters
+      generator.updateConfig({ enabledLetterIds: letters });
 
       // Generate questions and track types
       const typeCounts: Record<string, number> = {};
@@ -100,11 +101,11 @@ describe('AdaptiveQuestionGenerator', () => {
         typeCounts[question.type] = (typeCounts[question.type] || 0) + 1;
       }
 
-      // For mastered letter, should see variety of question types
+      // For mastered letters, should see variety of question types
       expect(typeCounts['formRecognition'] || 0).toBeGreaterThan(0);
-      // Should see some word-based questions (wordContext or wordReading)
-      const wordBasedCount = (typeCounts['wordContext'] || 0) + (typeCounts['wordReading'] || 0);
-      expect(wordBasedCount).toBeGreaterThan(0);
+      // Word reading requires enough mastery across multiple letters
+      // With mastered letters, we should see at least some word reading
+      expect(typeCounts['wordReading'] || 0).toBeGreaterThan(0);
     });
   });
 

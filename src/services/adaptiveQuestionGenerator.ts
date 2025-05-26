@@ -2,7 +2,7 @@ import { MasteryTracker, type LetterForm } from './masteryTracking';
 import { persianLetters, type PersianLetter } from '../data/persianLetters';
 import { WordProgressionService } from './wordProgressionService';
 
-export type QuizType = 'letterRecognition' | 'nameToLetter' | 'formRecognition' | 'wordContext' | 'wordReading';
+export type QuizType = 'letterRecognition' | 'nameToLetter' | 'formRecognition' | 'wordReading';
 
 export interface Question {
   type: QuizType;
@@ -10,7 +10,7 @@ export interface Question {
   form?: LetterForm;
   options: string[];
   correctAnswer: string;
-  word?: { persian: string; transliteration: string; meaning: string };
+  word?: { persian: string; persianWithDiacritics?: string; transliteration: string; meaning: string };
   targetLetterIndex?: number; // For word context questions
   wordId?: string; // For word reading questions
   currentLetterIndex?: number; // For word reading - which letter we're asking about
@@ -38,32 +38,28 @@ export class AdaptiveQuestionGenerator {
   // Quiz type weights based on mastery level
   private readonly QUIZ_TYPE_WEIGHTS = {
     learning: {
-      letterRecognition: 0.45,
+      letterRecognition: 0.5,
       nameToLetter: 0.25,
       formRecognition: 0.15,
-      wordContext: 0.05,
       wordReading: 0.1
     },
     familiar: {
-      letterRecognition: 0.25,
+      letterRecognition: 0.3,
       nameToLetter: 0.25,
-      formRecognition: 0.2,
-      wordContext: 0.15,
-      wordReading: 0.15
+      formRecognition: 0.25,
+      wordReading: 0.2
     },
     proficient: {
-      letterRecognition: 0.15,
+      letterRecognition: 0.2,
       nameToLetter: 0.15,
-      formRecognition: 0.25,
-      wordContext: 0.25,
-      wordReading: 0.2
+      formRecognition: 0.35,
+      wordReading: 0.3
     },
     mastered: {
       letterRecognition: 0.1,
       nameToLetter: 0.1,
-      formRecognition: 0.2,
-      wordContext: 0.3,
-      wordReading: 0.3
+      formRecognition: 0.3,
+      wordReading: 0.5
     }
   };
 
@@ -325,10 +321,6 @@ export class AdaptiveQuestionGenerator {
       }
     }
 
-    // If no example words available, zero out word context
-    if (!letter.exampleWords || letter.exampleWords.length === 0) {
-      adjustedWeights.wordContext = 0;
-    }
 
     // Weighted random selection
     const totalWeight = Object.values(adjustedWeights).reduce((a, b) => a + b, 0);
@@ -358,9 +350,6 @@ export class AdaptiveQuestionGenerator {
       
       case 'formRecognition':
         return this.createFormRecognitionQuestion(letter, form);
-      
-      case 'wordContext':
-        return this.createWordContextQuestion(letter, form);
       
       case 'wordReading':
         return this.createWordReadingQuestion();
@@ -408,73 +397,6 @@ export class AdaptiveQuestionGenerator {
     };
   }
 
-  private createWordContextQuestion(letter: PersianLetter, form: LetterForm): Question {
-    // Find a word that contains the letter in the specific form we're testing
-    const letterForm = letter[form];
-    let selectedWord = null;
-    let targetIndex = -1;
-    
-    // Try to find a word containing the specific form
-    for (const wordData of letter.exampleWords) {
-      for (let i = 0; i < wordData.word.length; i++) {
-        if (wordData.word[i] === letterForm) {
-          selectedWord = wordData;
-          targetIndex = i;
-          break;
-        }
-      }
-      if (selectedWord) break;
-    }
-    
-    // If we can't find a word with the specific form, fall back to any form
-    if (!selectedWord) {
-      // For isolated form, prefer words where letter appears at the end disconnected
-      // For initial form, prefer words where letter is at the beginning
-      // For medial form, prefer words where letter is in the middle
-      // For final form, prefer words where letter is at the end connected
-      
-      const allForms = [letter.isolated, letter.initial, letter.medial, letter.final];
-      for (const wordData of letter.exampleWords) {
-        for (let i = 0; i < wordData.word.length; i++) {
-          if (allForms.includes(wordData.word[i])) {
-            selectedWord = wordData;
-            targetIndex = i;
-            // Update the form to match what's actually in the word
-            if (wordData.word[i] === letter.isolated) form = 'isolated';
-            else if (wordData.word[i] === letter.initial) form = 'initial';
-            else if (wordData.word[i] === letter.medial) form = 'medial';
-            else if (wordData.word[i] === letter.final) form = 'final';
-            break;
-          }
-        }
-        if (selectedWord) break;
-      }
-    }
-    
-    // If still no word found, use the first available word
-    if (!selectedWord) {
-      selectedWord = letter.exampleWords[0];
-      targetIndex = 0;
-    }
-
-    const options = [letter.nameEn];
-    const distractors = this.getSmartDistracters(letter.id, 'nameEn', 3);
-    options.push(...distractors);
-
-    return {
-      type: 'wordContext',
-      letter,
-      form, // This is now the actual form found in the word
-      word: {
-        persian: selectedWord.word,
-        transliteration: selectedWord.transliteration,
-        meaning: selectedWord.meaning
-      },
-      options: this.shuffleArray(options),
-      correctAnswer: letter.nameEn,
-      targetLetterIndex: targetIndex
-    };
-  }
 
   private getSmartDistracters(
     letterId: string, 
@@ -691,6 +613,7 @@ export class AdaptiveQuestionGenerator {
       correctAnswer: selected.letter.nameEn,
       word: {
         persian: word.persian,
+        persianWithDiacritics: word.persianWithDiacritics,
         transliteration: word.transliteration,
         meaning: word.meaning
       },

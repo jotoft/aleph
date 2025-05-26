@@ -83,7 +83,8 @@ const correctAnswer = ref('');
 const highlightedWord = computed(() => {
   if (!currentWord.value) return '';
   
-  const word = currentWord.value.persian;
+  // Use diacritics version if available, otherwise use regular persian text
+  const word = currentWord.value.persianWithDiacritics || currentWord.value.persian;
   const index = currentLetterIndex.value;
   
   if (index >= word.length) return word;
@@ -107,6 +108,7 @@ function resetWord() {
 function generateOptions() {
   if (!currentWord.value) return;
   
+  // Always use the plain persian word for letter matching, not the diacritics version
   const word = currentWord.value.persian;
   const currentChar = word[currentLetterIndex.value];
   

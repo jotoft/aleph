@@ -44,19 +44,6 @@
             <p class="hint">Letter: {{ currentQuestion.letter.nameEn }}</p>
           </div>
           
-          <!-- Word Context Quiz -->
-          <div v-else-if="currentQuestion.type === 'wordContext'" class="question">
-            <div class="word-display" v-if="currentQuestion.word">
-              <p class="word-persian" dir="rtl" v-html="highlightedWord"></p>
-              <transition name="fade">
-                <div v-if="answered" class="word-info">
-                  <p class="word-transliteration">{{ currentQuestion.word.transliteration }}</p>
-                  <p class="word-meaning">"{{ currentQuestion.word.meaning }}"</p>
-                </div>
-              </transition>
-            </div>
-            <p class="question-text">Which letter is highlighted?</p>
-          </div>
           
           <!-- Word Reading Quiz -->
           <div v-else-if="currentQuestion.type === 'wordReading'" class="question">
@@ -230,24 +217,6 @@ const successMessages = [
   'Superb! ⭐'
 ];
 
-const highlightedWord = computed(() => {
-  if (!currentQuestion.value || 
-      currentQuestion.value.type !== 'wordContext' || 
-      !currentQuestion.value.word ||
-      currentQuestion.value.targetLetterIndex === undefined ||
-      currentQuestion.value.targetLetterIndex < 0) {
-    return currentQuestion.value?.word?.persian || '';
-  }
-  
-  const word = currentQuestion.value.word.persian;
-  const index = currentQuestion.value.targetLetterIndex;
-  
-  const before = word.substring(0, index);
-  const letter = word.substring(index, index + 1);
-  const after = word.substring(index + 1);
-  
-  return `${before}<mark class="highlighted-letter">${letter}</mark>${after}`;
-});
 
 const highlightedWordForReading = computed(() => {
   if (!currentQuestion.value || 
@@ -258,7 +227,8 @@ const highlightedWordForReading = computed(() => {
     return currentQuestion.value?.word?.persian || '';
   }
   
-  const word = currentQuestion.value.word.persian;
+  // Use diacritics version if available, otherwise use regular persian text
+  const word = currentQuestion.value.word.persianWithDiacritics || currentQuestion.value.word.persian;
   const index = currentQuestion.value.currentLetterIndex;
   
   const before = word.substring(0, index);
@@ -277,7 +247,6 @@ function getQuestionTypeLabel(type: string): string {
     case 'letterRecognition': return 'Letter Recognition';
     case 'nameToLetter': return 'Find the Letter';
     case 'formRecognition': return 'Form Recognition';
-    case 'wordContext': return 'Letter in Context';
     case 'wordReading': return 'Word Reading';
     default: return 'Question';
   }
