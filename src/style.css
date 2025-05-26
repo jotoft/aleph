@@ -17,10 +17,19 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* iOS PWA fixes */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
 }
 
 #app {
   width: 100%;
+  min-height: 100vh;
+  /* Use safe area insets for notched devices */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 button {

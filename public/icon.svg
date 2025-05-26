@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Dark background -->
+  <rect width="512" height="512" rx="96" fill="#1f2937"/>
+  
+  <!-- Big Alef (ا) in white/light color -->
+  <rect x="240" y="64" width="32" height="384" rx="16" fill="#f3f4f6"/>
+</svg>
