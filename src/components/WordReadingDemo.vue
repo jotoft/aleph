@@ -83,15 +83,52 @@ const correctAnswer = ref('');
 const highlightedWord = computed(() => {
   if (!currentWord.value) return '';
   
-  // Use diacritics version if available, otherwise use regular persian text
-  const word = currentWord.value.persianWithDiacritics || currentWord.value.persian;
-  const index = currentLetterIndex.value;
+  const plainWord = currentWord.value.persian;
+  const displayWord = currentWord.value.persianWithDiacritics || currentWord.value.persian;
+  const letterIndex = currentLetterIndex.value;
   
-  if (index >= word.length) return word;
+  if (letterIndex >= plainWord.length) return displayWord;
   
-  const before = word.substring(0, index);
-  const letter = word.substring(index, index + 1);
-  const after = word.substring(index + 1);
+  // If no diacritics, use simple highlighting
+  if (!currentWord.value.persianWithDiacritics) {
+    const before = displayWord.substring(0, letterIndex);
+    const letter = displayWord.substring(letterIndex, letterIndex + 1);
+    const after = displayWord.substring(letterIndex + 1);
+    return `${before}<mark class="highlighted-letter">${letter}</mark>${after}`;
+  }
+  
+  // Map plain text position to diacritics position
+  let plainPos = 0;
+  let diacriticsPos = 0;
+  
+  // Arabic diacritical marks Unicode ranges
+  const isDiacritic = (char: string) => {
+    const code = char.charCodeAt(0);
+    return (code >= 0x064B && code <= 0x065F) || // Arabic diacritics
+           (code >= 0x0670 && code <= 0x0670) || // Arabic letter superscript alef
+           (code >= 0x06D6 && code <= 0x06DC) || // Arabic small high ligatures
+           (code >= 0x06DF && code <= 0x06E4) || // Arabic small high letters
+           (code >= 0x06E7 && code <= 0x06E8) || // Arabic small high yeh/noon
+           (code >= 0x06EA && code <= 0x06ED);   // Arabic small low letters
+  };
+  
+  // Find the position in the diacritics string that corresponds to our letter index
+  while (plainPos < letterIndex && diacriticsPos < displayWord.length) {
+    if (!isDiacritic(displayWord[diacriticsPos])) {
+      plainPos++;
+    }
+    diacriticsPos++;
+  }
+  
+  // Find the end of the current letter (including any diacritics)
+  let endPos = diacriticsPos + 1;
+  while (endPos < displayWord.length && isDiacritic(displayWord[endPos])) {
+    endPos++;
+  }
+  
+  const before = displayWord.substring(0, diacriticsPos);
+  const letter = displayWord.substring(diacriticsPos, endPos);
+  const after = displayWord.substring(endPos);
   
   return `${before}<mark class="highlighted-letter">${letter}</mark>${after}`;
 });
