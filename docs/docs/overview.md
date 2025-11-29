@@ -24,8 +24,7 @@ Aleph helps users learn the Persian (Farsi) alphabet through an intelligent, ada
 Multiple question types adapt to your learning progress:
 - **Letter recognition**: Identify letters from their visual form
 - **Name to letter**: Match letter names to their visual representation
-- **Form recognition**: Distinguish between different forms of the same letter
-- **Word context**: Identify specific letters within Persian words
+- **Word reading**: Identify specific letters within Persian words
 
 ### 🎨 User Experience
 - **Dark mode support**: Seamless dark/light theme switching with persistent preference
