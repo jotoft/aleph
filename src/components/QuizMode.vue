@@ -34,7 +34,6 @@
           <!-- Name to Letter Quiz -->
           <div v-else-if="currentQuestion.type === 'nameToLetter' && currentQuestion.letter" class="question">
             <p class="question-text-large">Find the letter "{{ currentQuestion.letter.nameEn }}"</p>
-            <p class="hint">{{ currentQuestion.letter.nameFa }}</p>
           </div>
 
           <!-- Word Reading Quiz -->
