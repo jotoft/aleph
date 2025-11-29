@@ -102,7 +102,7 @@ describe('AdaptiveQuestionGenerator', () => {
       }
 
       // For mastered letters, should see variety of question types
-      expect(typeCounts['formRecognition'] || 0).toBeGreaterThan(0);
+      expect(typeCounts['nameToLetter'] || 0).toBeGreaterThan(0);
       // Word reading requires enough mastery across multiple letters
       // With mastered letters, we should see at least some word reading
       expect(typeCounts['wordReading'] || 0).toBeGreaterThan(0);
@@ -255,22 +255,5 @@ describe('AdaptiveQuestionGenerator', () => {
       expect(foundNameToLetter).toBe(true);
     });
 
-    it('should create valid form recognition questions', () => {
-      let foundFormRecognition = false;
-      
-      for (let i = 0; i < 50; i++) {
-        const question = generator.generateQuestion();
-        if (question.type === 'formRecognition') {
-          foundFormRecognition = true;
-          expect(question.form).toBeDefined();
-          expect(question.options).toEqual(['Isolated', 'Initial', 'Medial', 'Final']);
-          const expectedAnswer = question.form!.charAt(0).toUpperCase() + question.form!.slice(1);
-          expect(question.correctAnswer).toBe(expectedAnswer);
-          break;
-        }
-      }
-      
-      expect(foundFormRecognition).toBe(true);
-    });
   });
 });

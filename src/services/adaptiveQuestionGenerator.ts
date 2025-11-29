@@ -2,7 +2,7 @@ import { MasteryTracker, type LetterForm } from './masteryTracking';
 import { persianLetters, type PersianLetter } from '../data/persianLetters';
 import { WordProgressionService } from './wordProgressionService';
 
-export type QuizType = 'letterRecognition' | 'nameToLetter' | 'formRecognition' | 'wordReading';
+export type QuizType = 'letterRecognition' | 'nameToLetter' | 'wordReading';
 
 export interface Question {
   type: QuizType;
@@ -38,28 +38,24 @@ export class AdaptiveQuestionGenerator {
   // Quiz type weights based on mastery level
   private readonly QUIZ_TYPE_WEIGHTS = {
     learning: {
-      letterRecognition: 0.5,
-      nameToLetter: 0.25,
-      formRecognition: 0.15,
+      letterRecognition: 0.6,
+      nameToLetter: 0.3,
       wordReading: 0.1
     },
     familiar: {
-      letterRecognition: 0.3,
-      nameToLetter: 0.25,
-      formRecognition: 0.25,
-      wordReading: 0.2
+      letterRecognition: 0.4,
+      nameToLetter: 0.35,
+      wordReading: 0.25
     },
     proficient: {
-      letterRecognition: 0.2,
-      nameToLetter: 0.15,
-      formRecognition: 0.35,
-      wordReading: 0.3
+      letterRecognition: 0.3,
+      nameToLetter: 0.3,
+      wordReading: 0.4
     },
     mastered: {
-      letterRecognition: 0.1,
-      nameToLetter: 0.1,
-      formRecognition: 0.3,
-      wordReading: 0.5
+      letterRecognition: 0.2,
+      nameToLetter: 0.2,
+      wordReading: 0.6
     }
   };
 
@@ -114,7 +110,7 @@ export class AdaptiveQuestionGenerator {
     
     // Otherwise, use the traditional flow
     const letterAndForm = this.selectLetterAndForm();
-    const quizType = this.selectQuizType(letterAndForm.letter, letterAndForm.form);
+    const quizType = this.selectQuizType(letterAndForm.letter);
     const question = this.createQuestion(letterAndForm.letter, letterAndForm.form, quizType);
     
     // Track recent questions to avoid repetition
@@ -297,10 +293,10 @@ export class AdaptiveQuestionGenerator {
     return { letter: fallback.letter, form: fallback.form };
   }
 
-  private selectQuizType(letter: PersianLetter, form: LetterForm): QuizType {
+  private selectQuizType(letter: PersianLetter): QuizType {
     const mastery = this.tracker.getLetterMastery(letter.id);
     const masteryLevel = mastery?.masteryLevel ?? 0;
-    
+
     // Get weights based on mastery level
     const weights = this.QUIZ_TYPE_WEIGHTS[
       masteryLevel === 0 ? 'learning' :
@@ -308,25 +304,11 @@ export class AdaptiveQuestionGenerator {
       masteryLevel === 2 ? 'proficient' : 'mastered'
     ];
 
-    // Adjust weights based on specific conditions
-    const adjustedWeights = { ...weights };
-    
-    // If form recognition is weak, boost its weight
-    if (mastery && form !== 'isolated') {
-      const formAccuracy = mastery.forms[form].exposures > 0 
-        ? mastery.forms[form].correctAnswers / mastery.forms[form].exposures
-        : 0;
-      if (formAccuracy < 0.7) {
-        adjustedWeights.formRecognition *= 1.5;
-      }
-    }
-
-
     // Weighted random selection
-    const totalWeight = Object.values(adjustedWeights).reduce((a, b) => a + b, 0);
+    const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
     let random = Math.random() * totalWeight;
-    
-    for (const [type, weight] of Object.entries(adjustedWeights)) {
+
+    for (const [type, weight] of Object.entries(weights)) {
       random -= weight;
       if (random <= 0) {
         return type as QuizType;
@@ -347,10 +329,7 @@ export class AdaptiveQuestionGenerator {
       
       case 'nameToLetter':
         return this.createNameToLetterQuestion(letter, form);
-      
-      case 'formRecognition':
-        return this.createFormRecognitionQuestion(letter, form);
-      
+
       case 'wordReading':
         return this.createWordReadingQuestion();
     }
@@ -386,17 +365,6 @@ export class AdaptiveQuestionGenerator {
       correctAnswer: letterForm
     };
   }
-
-  private createFormRecognitionQuestion(letter: PersianLetter, form: LetterForm): Question {
-    return {
-      type: 'formRecognition',
-      letter,
-      form,
-      options: ['Isolated', 'Initial', 'Medial', 'Final'],
-      correctAnswer: form.charAt(0).toUpperCase() + form.slice(1)
-    };
-  }
-
 
   private getSmartDistracters(
     letterId: string, 

@@ -37,14 +37,6 @@
             <p class="hint">{{ currentQuestion.letter.nameFa }}</p>
           </div>
 
-          <!-- Form Recognition Quiz -->
-          <div v-else-if="currentQuestion.type === 'formRecognition' && currentQuestion.letter" class="question">
-            <div class="letter-display-large">{{ getLetterForm(currentQuestion.letter, currentQuestion.form || 'isolated') }}</div>
-            <p class="question-text">What form is this letter in?</p>
-            <p class="hint">Letter: {{ currentQuestion.letter.nameEn }}</p>
-          </div>
-          
-          
           <!-- Word Reading Quiz -->
           <div v-else-if="currentQuestion.type === 'wordReading'" class="question">
             <div class="word-display" v-if="currentQuestion.word">
@@ -290,7 +282,6 @@ function getQuestionTypeLabel(type: string): string {
   switch (type) {
     case 'letterRecognition': return 'Letter Recognition';
     case 'nameToLetter': return 'Find the Letter';
-    case 'formRecognition': return 'Form Recognition';
     case 'wordReading': return 'Word Reading';
     default: return 'Question';
   }
