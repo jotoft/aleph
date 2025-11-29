@@ -264,6 +264,11 @@ const highlightedWordForReading = computed(() => {
     diacriticsPos++;
   }
 
+  // Skip any diacritics at current position - they belong to the previous letter
+  while (diacriticsPos < displayWord.length && isDiacritic(displayWord[diacriticsPos])) {
+    diacriticsPos++;
+  }
+
   // Find the end of the current letter (including any diacritics)
   let endPos = diacriticsPos + 1;
   while (endPos < displayWord.length && isDiacritic(displayWord[endPos])) {
