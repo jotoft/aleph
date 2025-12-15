@@ -456,6 +456,280 @@ export const progressiveWords: ProgressiveWord[] = [
     difficulty: 3,
     category: "family",
     frequency: 4
+  },
+
+  // Shopping list: Vegetables (سبزیجات)
+  {
+    id: "piyaz",
+    persian: "پیاز",
+    transliteration: "piyāz",
+    meaning: "onion",
+    requiredLetters: ["peh", "yeh", "alef", "zeh"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 5
+  },
+  {
+    id: "sir",
+    persian: "سیر",
+    transliteration: "sir",
+    meaning: "garlic",
+    requiredLetters: ["sin", "yeh", "reh"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 5
+  },
+  {
+    id: "gojeh",
+    persian: "گوجه",
+    transliteration: "gojeh",
+    meaning: "tomato",
+    requiredLetters: ["gaf", "vav", "jim", "heh"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 5
+  },
+  {
+    id: "khiyar",
+    persian: "خیار",
+    transliteration: "khiyār",
+    meaning: "cucumber",
+    requiredLetters: ["kheh", "yeh", "alef", "reh"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 5
+  },
+  {
+    id: "havij",
+    persian: "هویج",
+    transliteration: "havij",
+    meaning: "carrot",
+    requiredLetters: ["heh", "vav", "yeh", "jim"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "kahu",
+    persian: "کاهو",
+    transliteration: "kāhu",
+    meaning: "lettuce",
+    requiredLetters: ["kaf", "alef", "heh", "vav"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "kadu",
+    persian: "کدو",
+    transliteration: "kadu",
+    meaning: "squash/zucchini",
+    requiredLetters: ["kaf", "dal", "vav"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "felfel",
+    persian: "فلفل",
+    transliteration: "felfel",
+    meaning: "pepper",
+    requiredLetters: ["feh", "lam"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "sibzamini",
+    persian: "سیب‌زمینی",
+    transliteration: "sib-zamini",
+    meaning: "potato",
+    requiredLetters: ["sin", "yeh", "beh", "zeh", "mim", "nun"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 5
+  },
+  {
+    id: "badamjan",
+    persian: "بادمجان",
+    transliteration: "bādamjān",
+    meaning: "eggplant",
+    requiredLetters: ["beh", "alef", "dal", "mim", "jim", "nun"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "esfenaj",
+    persian: "اسفناج",
+    transliteration: "esfenāj",
+    meaning: "spinach",
+    requiredLetters: ["alef", "sin", "feh", "nun", "jim"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 3
+  },
+  {
+    id: "lubiya",
+    persian: "لوبیا",
+    transliteration: "lubiyā",
+    meaning: "beans",
+    requiredLetters: ["lam", "vav", "beh", "yeh", "alef"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "nokhod",
+    persian: "نخود",
+    transliteration: "nokhod",
+    meaning: "chickpeas",
+    requiredLetters: ["nun", "kheh", "vav", "dal"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "gharch",
+    persian: "قارچ",
+    transliteration: "qārch",
+    meaning: "mushroom",
+    requiredLetters: ["qaf", "alef", "reh", "cheh"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 3
+  },
+  {
+    id: "jafari",
+    persian: "جعفری",
+    transliteration: "ja'fari",
+    meaning: "parsley",
+    requiredLetters: ["jim", "ain", "feh", "reh", "yeh"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "geshniz",
+    persian: "گشنیز",
+    transliteration: "geshniz",
+    meaning: "cilantro/coriander",
+    requiredLetters: ["gaf", "shin", "nun", "yeh", "zeh"],
+    difficulty: 2,
+    category: "vegetables",
+    frequency: 4
+  },
+  {
+    id: "tareh",
+    persian: "تره",
+    transliteration: "tareh",
+    meaning: "leek/chives",
+    requiredLetters: ["teh", "reh", "heh"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 3
+  },
+  {
+    id: "sabzi",
+    persian: "سبزی",
+    transliteration: "sabzi",
+    meaning: "herbs/greens",
+    requiredLetters: ["sin", "beh", "zeh", "yeh"],
+    difficulty: 1,
+    category: "vegetables",
+    frequency: 5
+  },
+
+  // Shopping list: Dairy & Eggs (لبنیات و تخم مرغ)
+  {
+    id: "shir",
+    persian: "شیر",
+    transliteration: "shir",
+    meaning: "milk",
+    requiredLetters: ["shin", "yeh", "reh"],
+    difficulty: 1,
+    category: "dairy",
+    frequency: 5
+  },
+  {
+    id: "mast",
+    persian: "ماست",
+    transliteration: "māst",
+    meaning: "yogurt",
+    requiredLetters: ["mim", "alef", "sin", "teh"],
+    difficulty: 1,
+    category: "dairy",
+    frequency: 5
+  },
+  {
+    id: "panir",
+    persian: "پنیر",
+    transliteration: "panir",
+    meaning: "cheese",
+    requiredLetters: ["peh", "nun", "yeh", "reh"],
+    difficulty: 1,
+    category: "dairy",
+    frequency: 5
+  },
+  {
+    id: "kareh",
+    persian: "کره",
+    transliteration: "kareh",
+    meaning: "butter",
+    requiredLetters: ["kaf", "reh", "heh"],
+    difficulty: 1,
+    category: "dairy",
+    frequency: 5
+  },
+  {
+    id: "tokhmemorgh",
+    persian: "تخم‌مرغ",
+    transliteration: "tokhm-e morgh",
+    meaning: "egg",
+    requiredLetters: ["teh", "kheh", "mim", "reh", "ghain"],
+    difficulty: 2,
+    category: "dairy",
+    frequency: 5
+  },
+  {
+    id: "khameh",
+    persian: "خامه",
+    transliteration: "khāmeh",
+    meaning: "cream",
+    requiredLetters: ["kheh", "alef", "mim", "heh"],
+    difficulty: 1,
+    category: "dairy",
+    frequency: 4
+  },
+  {
+    id: "dugh",
+    persian: "دوغ",
+    transliteration: "dugh",
+    meaning: "yogurt drink",
+    requiredLetters: ["dal", "vav", "ghain"],
+    difficulty: 1,
+    category: "dairy",
+    frequency: 4
+  },
+  {
+    id: "sarshir",
+    persian: "سرشیر",
+    transliteration: "sarshir",
+    meaning: "clotted cream",
+    requiredLetters: ["sin", "reh", "shin", "yeh"],
+    difficulty: 2,
+    category: "dairy",
+    frequency: 3
+  },
+  {
+    id: "kashk",
+    persian: "کشک",
+    transliteration: "kashk",
+    meaning: "whey (dried)",
+    requiredLetters: ["kaf", "shin"],
+    difficulty: 1,
+    category: "dairy",
+    frequency: 3
   }
 ];
 
