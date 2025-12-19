@@ -464,7 +464,8 @@ function submitTypedAnswer() {
 
 function focusTypingInput() {
   if (typingMode.value && currentQuestion.value?.type !== 'nameToLetter') {
-    nextTick(() => typingInput.value?.focus());
+    // Use setTimeout to wait for transition animation to complete
+    setTimeout(() => typingInput.value?.focus(), 50);
   }
 }
 
