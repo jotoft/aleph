@@ -15,6 +15,7 @@ export interface Question {
   wordId?: string; // For word reading questions
   currentLetterIndex?: number; // For word reading - which letter we're asking about
   wordLetters?: PersianLetter[]; // All letters in the word for word reading
+  wordLetterPositions?: number[]; // String positions of each letter (for words with ZWNJ/spaces)
   isLastLetterInWord?: boolean; // True when reading the last letter
 }
 
@@ -588,6 +589,7 @@ export class AdaptiveQuestionGenerator {
       wordId: word.id,
       currentLetterIndex: selected.index,
       wordLetters: letterOptions.map(opt => opt.letter),
+      wordLetterPositions: letterOptions.map(opt => opt.index),
       isLastLetterInWord: currentIndex === letterOptions.length - 1
     };
   }

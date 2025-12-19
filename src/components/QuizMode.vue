@@ -196,6 +196,7 @@ const confusedWith = ref<{ letterId: string; form?: string } | null>(null);
 const currentWordId = ref<string | null>(null);
 const currentWordProgress = ref<number>(0); // Which letter we're on
 const wordReadingLetters = ref<PersianLetter[]>([]);
+const wordLetterPositions = ref<number[]>([]); // String positions of each letter
 
 const successMessages = [
   'Excellent! 🌟',
@@ -293,47 +294,51 @@ function getLetterForm(letter: PersianLetter, form: string): string {
 function generateNextQuestion() {
   const question = questionGenerator.value.generateQuestion();
   currentQuestion.value = question;
-  
+
   // If it's a new word reading question, initialize the word state
   if (question.type === 'wordReading' && question.wordId && question.wordLetters) {
     currentWordId.value = question.wordId;
     currentWordProgress.value = 0;
     wordReadingLetters.value = question.wordLetters;
+    wordLetterPositions.value = question.wordLetterPositions || [];
   }
 }
 
 function generateNextLetterInWord() {
   if (!currentQuestion.value || !currentWordId.value) return;
-  
+
   // Create a new question for the next letter in the word
   const word = currentQuestion.value.word;
   const wordId = currentWordId.value;
   const wordLetters = wordReadingLetters.value;
-  
+  const letterPositions = wordLetterPositions.value;
+
   if (!word || currentWordProgress.value >= wordLetters.length) {
     // Fallback to regular next question
     nextQuestion();
     return;
   }
-  
+
   // Find the letter at current position
   const currentLetter = wordLetters[currentWordProgress.value];
+  // Get the actual string position (handles ZWNJ and other non-letter chars)
+  const stringPosition = letterPositions[currentWordProgress.value] ?? currentWordProgress.value;
   if (!currentLetter) {
     nextQuestion();
     return;
   }
-  
+
   // Create distractors
   const options = [currentLetter.nameEn];
-  const enabledLetters = persianLetters.filter(l => 
+  const enabledLetters = persianLetters.filter(l =>
     questionGenerator.value.getActiveLetters().includes(l.id) && l.id !== currentLetter.id
   );
-  
+
   // Get random distractors
   const shuffled = [...enabledLetters].sort(() => Math.random() - 0.5);
   const distractors = shuffled.slice(0, 3).map(l => l.nameEn);
   options.push(...distractors);
-  
+
   // Create the question for the current letter
   currentQuestion.value = {
     type: 'wordReading',
@@ -342,8 +347,9 @@ function generateNextLetterInWord() {
     correctAnswer: currentLetter.nameEn,
     word: word,
     wordId: wordId,
-    currentLetterIndex: currentWordProgress.value,
+    currentLetterIndex: stringPosition,
     wordLetters: wordLetters,
+    wordLetterPositions: letterPositions,
     isLastLetterInWord: currentWordProgress.value === wordLetters.length - 1
   };
 }
@@ -382,10 +388,10 @@ function selectAnswer(answer: string, _index?: number) {
     if (streak.value > maxStreak.value) {
       maxStreak.value = streak.value;
     }
-    // Auto-progress after shorter delay for correct answers
+    // Auto-progress after short delay for correct answers
     autoProgressTimeout.value = window.setTimeout(() => {
       nextQuestion();
-    }, 1500);
+    }, 140);
   } else {
     streak.value = 0;
   }
@@ -459,12 +465,14 @@ function nextQuestion() {
     currentWordId.value = null;
     currentWordProgress.value = 0;
     wordReadingLetters.value = [];
+    wordLetterPositions.value = [];
   }
-  
+
   // Reset word reading state when moving to a new question
   currentWordId.value = null;
   currentWordProgress.value = 0;
   wordReadingLetters.value = [];
+  wordLetterPositions.value = [];
   
   if (!isInfiniteMode.value && currentQuestionIndex.value >= totalQuestions.value - 1) {
     quizComplete.value = true;
