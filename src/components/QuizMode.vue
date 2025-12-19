@@ -469,7 +469,7 @@ function selectAnswer(answer: string, _index?: number) {
     // Longer delay when showing full word info, short delay otherwise
     const isShowingWordInfo = currentQuestion.value?.type === 'wordReading' &&
                               currentQuestion.value?.isLastLetterInWord;
-    const delay = isShowingWordInfo ? 2500 : 140;
+    const delay = isShowingWordInfo ? 500 : 140;
     autoProgressTimeout.value = window.setTimeout(() => {
       nextQuestion();
     }, delay);
