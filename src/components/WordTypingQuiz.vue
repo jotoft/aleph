@@ -236,7 +236,7 @@ function normalizeTransliteration(text: string): string {
     .replace(/ii/g, 'i')
     .replace(/uu/g, 'u')
     .replace(/ee/g, 'e')
-    .replace(/oo/g, 'o')
+    .replace(/oo/g, 'u')
     // Accept i for iy (yeh sound)
     .replace(/iy/g, 'i')
     .trim();
