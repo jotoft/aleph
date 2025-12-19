@@ -4,10 +4,11 @@ import LetterDisplay from './components/LetterDisplay.vue';
 import QuizMode from './components/QuizMode.vue';
 import MasteryProgress from './components/MasteryProgress.vue';
 import WordReadingDemo from './components/WordReadingDemo.vue';
+import WordTypingQuiz from './components/WordTypingQuiz.vue';
 import { persianLetters } from './data/persianLetters';
 import { MasteryTracker } from './services/masteryTracking';
 
-const currentView = ref<'study' | 'quiz' | 'progress' | 'demo'>('study');
+const currentView = ref<'study' | 'quiz' | 'progress' | 'demo' | 'words'>('study');
 const currentLetterIndex = ref(0);
 const currentLetter = ref(persianLetters[currentLetterIndex.value]);
 const isDarkMode = ref(false);
@@ -132,11 +133,18 @@ onUnmounted(() => {
         >
           Progress
         </button>
-        <button 
-          @click="startInfiniteMode" 
+        <button
+          @click="startInfiniteMode"
           class="infinite-mode-button"
         >
           ∞ Infinite
+        </button>
+        <button
+          @click="currentView = 'words'"
+          :class="{ active: currentView === 'words' }"
+          class="words-mode-button"
+        >
+          📝 Words
         </button>
       </nav>
     </header>
@@ -187,6 +195,10 @@ onUnmounted(() => {
       <div v-else-if="currentView === 'demo'" class="demo-view">
         <button @click="currentView = 'study'" class="back-button">← Back to Study</button>
         <WordReadingDemo />
+      </div>
+
+      <div v-else-if="currentView === 'words'" class="words-mode">
+        <WordTypingQuiz @close="currentView = 'study'" />
       </div>
     </main>
     
@@ -312,6 +324,22 @@ onUnmounted(() => {
 
 .app.dark .infinite-mode-button:hover {
   background-color: #047857 !important;
+}
+
+.words-mode-button {
+  background-color: #8b5cf6 !important;
+}
+
+.words-mode-button:hover {
+  background-color: #7c3aed !important;
+}
+
+.app.dark .words-mode-button {
+  background-color: #7c3aed !important;
+}
+
+.app.dark .words-mode-button:hover {
+  background-color: #6d28d9 !important;
 }
 
 .app-main {
@@ -444,6 +472,14 @@ onUnmounted(() => {
 }
 
 .quiz-mode {
+  max-width: 800px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.words-mode {
   max-width: 800px;
   margin: 0 auto;
   height: 100%;

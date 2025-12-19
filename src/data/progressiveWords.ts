@@ -754,3 +754,34 @@ export function getWordsByCategory(words: ProgressiveWord[], category: string): 
 export function getCategories(): string[] {
   return [...new Set(progressiveWords.map(word => word.category))];
 }
+
+// Word progression groups - words are introduced in stages
+// Each group unlocks when previous groups reach sufficient mastery
+export const wordProgressionGroups: string[][] = [
+  // Group 1: Very common, short words (2-3 letters)
+  ['ab', 'bad', 'man', 'dar', 'del', 'sar', 'dou', 'to', 'pa', 'nou'],
+  // Group 2: Common short words and greetings
+  ['sal', 'nam', 'bas', 'tar', 'gol', 'zan', 'kar', 'rah', 'salam'],
+  // Group 3: Family and basic nouns
+  ['pedar', 'madar', 'doust', 'mard', 'shir', 'mast', 'panir'],
+  // Group 4: More vocabulary
+  ['kitab', 'khaneh', 'shahr', 'hava', 'baradar', 'khahar', 'kareh'],
+  // Group 5: Food and shopping
+  ['piyaz', 'sir', 'gojeh', 'khiyar', 'kahu', 'kadu', 'sabzi'],
+  // Group 6: More complex words
+  ['sibzamini', 'badamjan', 'mamnun', 'bebakhshid', 'tokhmemorgh'],
+  // Group 7: All remaining words
+  [...progressiveWords.map(w => w.id).filter(id =>
+    !['ab', 'bad', 'man', 'dar', 'del', 'sar', 'dou', 'to', 'pa', 'nou',
+      'sal', 'nam', 'bas', 'tar', 'gol', 'zan', 'kar', 'rah', 'salam',
+      'pedar', 'madar', 'doust', 'mard', 'shir', 'mast', 'panir',
+      'kitab', 'khaneh', 'shahr', 'hava', 'baradar', 'khahar', 'kareh',
+      'piyaz', 'sir', 'gojeh', 'khiyar', 'kahu', 'kadu', 'sabzi',
+      'sibzamini', 'badamjan', 'mamnun', 'bebakhshid', 'tokhmemorgh'].includes(id)
+  )]
+];
+
+// Get word by ID
+export function getWordById(id: string): ProgressiveWord | undefined {
+  return progressiveWords.find(w => w.id === id);
+}
