@@ -742,6 +742,13 @@ onUnmounted(() => {
   margin-bottom: 2rem;
 }
 
+/* Horizontal layout on wider screens */
+@media (min-width: 1200px) {
+  .answers-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .answers-grid.letters-grid {
   grid-template-columns: repeat(4, 1fr);
 }
