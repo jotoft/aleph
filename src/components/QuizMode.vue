@@ -622,17 +622,17 @@ function startNewQuiz(infinite = false) {
 
 function handleKeyPress(event: KeyboardEvent) {
   if (!currentQuestion.value) return;
-  
+
   const key = event.key;
   const numKey = parseInt(key);
-  
-  // Handle Enter or Space for next question when answered
-  if ((key === 'Enter' || key === ' ') && answered.value) {
+
+  // Handle Enter or Space for next question when answered wrong (correct answers auto-progress)
+  if ((key === 'Enter' || key === ' ') && answered.value && !isCorrect.value) {
     event.preventDefault();
     nextQuestion();
   }
-  // Handle number keys 1-4 when not answered
-  else if (!answered.value && numKey >= 1 && numKey <= currentQuestion.value.options.length) {
+  // Handle number keys 1-4 when not answered (only in button mode)
+  else if (!typingMode.value && !answered.value && numKey >= 1 && numKey <= currentQuestion.value.options.length) {
     const optionIndex = numKey - 1;
     selectAnswer(currentQuestion.value.options[optionIndex], optionIndex);
   }
