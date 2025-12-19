@@ -237,6 +237,8 @@ function normalizeTransliteration(text: string): string {
     .replace(/uu/g, 'u')
     .replace(/ee/g, 'e')
     .replace(/oo/g, 'o')
+    // Accept i for iy (yeh sound)
+    .replace(/iy/g, 'i')
     .trim();
 }
 
