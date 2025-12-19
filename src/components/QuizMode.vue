@@ -17,7 +17,12 @@
           <span class="stat-value">{{ currentQuestionIndex + 1 }}{{ isInfiniteMode ? '' : '/' + totalQuestions }}</span>
         </div>
       </div>
-      <button @click="$emit('close')" class="close-button">✕</button>
+      <div class="header-actions">
+        <button @click="toggleTypingMode" class="mode-toggle" :class="{ active: typingMode }">
+          ⌨️ Type
+        </button>
+        <button @click="$emit('close')" class="close-button">✕</button>
+      </div>
     </div>
 
     <div v-if="!quizComplete" class="quiz-content">
@@ -56,29 +61,65 @@
             <p class="hint" v-if="!answered">Letter {{ currentWordProgress + 1 }} of {{ wordReadingLetters.length }}</p>
           </div>
 
-          <!-- Answer Options -->
-          <div class="answers-grid" :class="{ 'letters-grid': currentQuestion.type === 'nameToLetter' }">
-            <button 
-              v-for="(option, index) in currentQuestion.options" 
+          <!-- Answer Options - Button Mode -->
+          <div v-if="!typingMode && currentQuestion.type !== 'nameToLetter'" class="answers-grid">
+            <button
+              v-for="(option, index) in currentQuestion.options"
               :key="index"
               @click="selectAnswer(option, index)"
               :disabled="answered"
               class="answer-button"
               :data-hotkey="index + 1"
-              :class="{ 
+              :class="{
                 'correct': answered && option === currentQuestion.correctAnswer,
-                'incorrect': answered && option === selectedAnswer && option !== currentQuestion.correctAnswer,
-                'letter-option': currentQuestion.type === 'nameToLetter'
+                'incorrect': answered && option === selectedAnswer && option !== currentQuestion.correctAnswer
               }"
             >
               <div class="answer-content">
                 <span class="hotkey-hint">{{ index + 1 }}</span>
-                <span v-if="currentQuestion.type === 'nameToLetter'" class="letter-option-text">
-                  {{ option }}
-                </span>
-                <span v-else>{{ option }}</span>
+                <span>{{ option }}</span>
               </div>
             </button>
+          </div>
+
+          <!-- Answer Options - Letter Grid (nameToLetter always uses buttons) -->
+          <div v-else-if="currentQuestion.type === 'nameToLetter'" class="answers-grid letters-grid">
+            <button
+              v-for="(option, index) in currentQuestion.options"
+              :key="index"
+              @click="selectAnswer(option, index)"
+              :disabled="answered"
+              class="answer-button letter-option"
+              :data-hotkey="index + 1"
+              :class="{
+                'correct': answered && option === currentQuestion.correctAnswer,
+                'incorrect': answered && option === selectedAnswer && option !== currentQuestion.correctAnswer
+              }"
+            >
+              <div class="answer-content">
+                <span class="hotkey-hint">{{ index + 1 }}</span>
+                <span class="letter-option-text">{{ option }}</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Answer Options - Typing Mode -->
+          <div v-else class="typing-mode-container">
+            <input
+              ref="typingInput"
+              v-model="typedAnswer"
+              @keydown.enter="submitTypedAnswer"
+              :disabled="answered"
+              type="text"
+              class="typing-input"
+              :class="{ 'correct': answered && isCorrect, 'incorrect': answered && !isCorrect }"
+              placeholder="Type letter name..."
+              autocomplete="off"
+              autocapitalize="off"
+            />
+            <p v-if="answered && !isCorrect" class="typing-correct-answer">
+              Correct: {{ currentQuestion.correctAnswer }}
+            </p>
           </div>
 
           <!-- Feedback -->
@@ -123,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { persianLetters, type PersianLetter } from '../data/persianLetters';
 import { MasteryTracker } from '../services/masteryTracking';
 import { AdaptiveQuestionGenerator } from '../services/adaptiveQuestionGenerator';
@@ -197,6 +238,11 @@ const currentWordId = ref<string | null>(null);
 const currentWordProgress = ref<number>(0); // Which letter we're on
 const wordReadingLetters = ref<PersianLetter[]>([]);
 const wordLetterPositions = ref<number[]>([]); // String positions of each letter
+
+// Typing mode
+const typingMode = ref(localStorage.getItem('typingMode') === 'true');
+const typedAnswer = ref('');
+const typingInput = ref<HTMLInputElement | null>(null);
 
 const successMessages = [
   'Excellent! 🌟',
@@ -302,6 +348,10 @@ function generateNextQuestion() {
     wordReadingLetters.value = question.wordLetters;
     wordLetterPositions.value = question.wordLetterPositions || [];
   }
+
+  // Clear and focus typing input
+  typedAnswer.value = '';
+  focusTypingInput();
 }
 
 function generateNextLetterInWord() {
@@ -352,6 +402,35 @@ function generateNextLetterInWord() {
     wordLetterPositions: letterPositions,
     isLastLetterInWord: currentWordProgress.value === wordLetters.length - 1
   };
+
+  // Clear and focus typing input
+  typedAnswer.value = '';
+  focusTypingInput();
+}
+
+function toggleTypingMode() {
+  typingMode.value = !typingMode.value;
+  localStorage.setItem('typingMode', typingMode.value.toString());
+  // Focus input if switching to typing mode
+  if (typingMode.value && !answered.value) {
+    nextTick(() => typingInput.value?.focus());
+  }
+}
+
+function submitTypedAnswer() {
+  if (answered.value || !currentQuestion.value || !typedAnswer.value.trim()) return;
+
+  const typed = typedAnswer.value.trim().toLowerCase();
+  const correct = currentQuestion.value.correctAnswer.toLowerCase();
+
+  // Check if answer matches (case-insensitive)
+  selectAnswer(typed === correct ? currentQuestion.value.correctAnswer : typedAnswer.value.trim());
+}
+
+function focusTypingInput() {
+  if (typingMode.value && currentQuestion.value?.type !== 'nameToLetter') {
+    nextTick(() => typingInput.value?.focus());
+  }
 }
 
 function selectAnswer(answer: string, _index?: number) {
@@ -622,6 +701,115 @@ onUnmounted(() => {
 .dark .close-button:hover {
   background-color: #4b5563;
   color: #f3f4f6;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mode-toggle {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  background: none;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.mode-toggle:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.mode-toggle.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.dark .mode-toggle {
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+
+.dark .mode-toggle:hover {
+  background-color: #4b5563;
+  border-color: #6b7280;
+}
+
+.dark .mode-toggle.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.typing-mode-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.typing-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 1rem 1.25rem;
+  font-size: 1.25rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.typing-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.typing-input.correct {
+  border-color: #10b981;
+  background-color: #ecfdf5;
+}
+
+.typing-input.incorrect {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.dark .typing-input {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f3f4f6;
+}
+
+.dark .typing-input:focus {
+  border-color: #3b82f6;
+}
+
+.dark .typing-input.correct {
+  border-color: #10b981;
+  background-color: #064e3b;
+}
+
+.dark .typing-input.incorrect {
+  border-color: #ef4444;
+  background-color: #7f1d1d;
+}
+
+.typing-correct-answer {
+  font-size: 1rem;
+  color: #10b981;
+  margin: 0;
+}
+
+.dark .typing-correct-answer {
+  color: #34d399;
 }
 
 .quiz-content {
