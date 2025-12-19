@@ -464,8 +464,10 @@ function submitTypedAnswer() {
 
 function focusTypingInput() {
   if (typingMode.value && currentQuestion.value?.type !== 'nameToLetter') {
-    // Use setTimeout to wait for transition animation to complete
-    setTimeout(() => typingInput.value?.focus(), 50);
+    // Wait for fade transition (300ms out + some buffer for new element)
+    setTimeout(() => {
+      typingInput.value?.focus();
+    }, 350);
   }
 }
 
