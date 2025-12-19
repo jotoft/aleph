@@ -113,7 +113,6 @@
               type="text"
               class="typing-input"
               :class="{ 'correct': answered && isCorrect, 'incorrect': answered && !isCorrect }"
-              placeholder="Type letter name..."
               autocomplete="off"
               autocapitalize="off"
             />
@@ -440,8 +439,8 @@ function selectAnswer(answer: string, _index?: number) {
   answered.value = true;
   isCorrect.value = answer === currentQuestion.value.correctAnswer;
   
-  // Remove focus from the button to prevent it staying highlighted
-  if (document.activeElement instanceof HTMLElement) {
+  // Remove focus from the button to prevent it staying highlighted (but not in typing mode)
+  if (!typingMode.value && document.activeElement instanceof HTMLElement) {
     document.activeElement.blur();
   }
   
@@ -470,7 +469,7 @@ function selectAnswer(answer: string, _index?: number) {
     // Longer delay when showing full word info, short delay otherwise
     const isShowingWordInfo = currentQuestion.value?.type === 'wordReading' &&
                               currentQuestion.value?.isLastLetterInWord;
-    const delay = isShowingWordInfo ? 1500 : 140;
+    const delay = isShowingWordInfo ? 2500 : 140;
     autoProgressTimeout.value = window.setTimeout(() => {
       nextQuestion();
     }, delay);
