@@ -21,7 +21,22 @@
         <button @click="toggleTypingMode" class="mode-toggle" :class="{ active: typingMode }">
           ⌨️ Type
         </button>
+        <button @click="showSettings = !showSettings" class="mode-toggle" :class="{ active: showSettings }">
+          ⚙️
+        </button>
         <button @click="$emit('close')" class="close-button">✕</button>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div v-if="showSettings" class="settings-panel">
+      <div class="setting-item">
+        <label>Letter delay (ms)</label>
+        <input type="number" v-model.number="letterDelay" @change="saveSettings" min="0" max="2000" step="10" />
+      </div>
+      <div class="setting-item">
+        <label>Word info delay (ms)</label>
+        <input type="number" v-model.number="wordInfoDelay" @change="saveSettings" min="0" max="5000" step="50" />
       </div>
     </div>
 
@@ -108,8 +123,7 @@
             <input
               ref="typingInput"
               v-model="typedAnswer"
-              @keydown.enter="submitTypedAnswer"
-              :disabled="answered"
+              @keydown.enter="handleTypingEnter"
               type="text"
               class="typing-input"
               :class="{ 'correct': answered && isCorrect, 'incorrect': answered && !isCorrect }"
@@ -119,6 +133,7 @@
             <p v-if="answered && !isCorrect" class="typing-correct-answer">
               Correct: {{ currentQuestion.correctAnswer }}
             </p>
+            <p v-if="answered && !isCorrect" class="typing-hint">Press Enter to continue</p>
           </div>
 
           <!-- Feedback -->
@@ -242,6 +257,11 @@ const wordLetterPositions = ref<number[]>([]); // String positions of each lette
 const typingMode = ref(localStorage.getItem('typingMode') === 'true');
 const typedAnswer = ref('');
 const typingInput = ref<HTMLInputElement | null>(null);
+
+// Settings
+const showSettings = ref(false);
+const letterDelay = ref(parseInt(localStorage.getItem('letterDelay') || '140'));
+const wordInfoDelay = ref(parseInt(localStorage.getItem('wordInfoDelay') || '500'));
 
 const successMessages = [
   'Excellent! 🌟',
@@ -416,6 +436,22 @@ function toggleTypingMode() {
   }
 }
 
+function saveSettings() {
+  localStorage.setItem('letterDelay', letterDelay.value.toString());
+  localStorage.setItem('wordInfoDelay', wordInfoDelay.value.toString());
+}
+
+function handleTypingEnter() {
+  if (answered.value) {
+    // If already answered wrong, Enter continues to next question
+    if (!isCorrect.value) {
+      nextQuestion();
+    }
+    return;
+  }
+  submitTypedAnswer();
+}
+
 function submitTypedAnswer() {
   if (answered.value || !currentQuestion.value || !typedAnswer.value.trim()) return;
 
@@ -469,7 +505,7 @@ function selectAnswer(answer: string, _index?: number) {
     // Longer delay when showing full word info, short delay otherwise
     const isShowingWordInfo = currentQuestion.value?.type === 'wordReading' &&
                               currentQuestion.value?.isLastLetterInWord;
-    const delay = isShowingWordInfo ? 500 : 140;
+    const delay = isShowingWordInfo ? wordInfoDelay.value : letterDelay.value;
     autoProgressTimeout.value = window.setTimeout(() => {
       nextQuestion();
     }, delay);
@@ -803,12 +839,64 @@ onUnmounted(() => {
 
 .typing-correct-answer {
   font-size: 1rem;
-  color: #10b981;
+  color: #ef4444;
   margin: 0;
 }
 
 .dark .typing-correct-answer {
-  color: #34d399;
+  color: #f87171;
+}
+
+.typing-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.dark .typing-hint {
+  color: #9ca3af;
+}
+
+.settings-panel {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #e5e7eb;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.dark .settings-panel {
+  background-color: #374151;
+  border-bottom-color: #4b5563;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.setting-item label {
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.dark .setting-item label {
+  color: #9ca3af;
+}
+
+.setting-item input {
+  width: 70px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.dark .setting-item input {
+  background-color: #4b5563;
+  border-color: #6b7280;
+  color: #f3f4f6;
 }
 
 .quiz-content {
