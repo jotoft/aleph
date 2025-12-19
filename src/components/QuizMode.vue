@@ -388,10 +388,13 @@ function selectAnswer(answer: string, _index?: number) {
     if (streak.value > maxStreak.value) {
       maxStreak.value = streak.value;
     }
-    // Auto-progress after short delay for correct answers
+    // Longer delay when showing full word info, short delay otherwise
+    const isShowingWordInfo = currentQuestion.value?.type === 'wordReading' &&
+                              currentQuestion.value?.isLastLetterInWord;
+    const delay = isShowingWordInfo ? 1500 : 140;
     autoProgressTimeout.value = window.setTimeout(() => {
       nextQuestion();
-    }, 140);
+    }, delay);
   } else {
     streak.value = 0;
   }
