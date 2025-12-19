@@ -702,9 +702,9 @@ export const progressiveWords: ProgressiveWord[] = [
     frequency: 4
   },
   {
-    id: "dugh",
+    id: "doogh",
     persian: "دوغ",
-    transliteration: "dugh",
+    transliteration: "doogh",
     meaning: "yogurt drink",
     requiredLetters: ["dal", "vav", "ghain"],
     difficulty: 1,
