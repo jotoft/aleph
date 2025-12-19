@@ -231,6 +231,12 @@ function normalizeTransliteration(text: string): string {
     .replace(/[ō]/g, 'o')
     .replace(/['ʿʾ`']/g, '')
     .replace(/[-\s]/g, '')
+    // Handle doubled vowels as long vowels
+    .replace(/aa/g, 'a')
+    .replace(/ii/g, 'i')
+    .replace(/uu/g, 'u')
+    .replace(/ee/g, 'e')
+    .replace(/oo/g, 'o')
     .trim();
 }
 
